@@ -1,0 +1,47 @@
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Ignore virtual environment directories
+venv/
+env/
+ENV/
+
+# Ignore PyCharm specific files
+.idea/
+*.iml
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore macOS specific files
+.DS_Store
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Ignore compiled C extensions
+*.so
+
+# Ignore coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Ignore test outputs
+*.pytest_cache/
+.tox/
+
+# Ignore built distributions
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Ignore wheels
+*.whl
