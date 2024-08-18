@@ -27,7 +27,6 @@ def pick_best_squad(data, budget=1000):
         iteration += 1
 
         squad_cost = sum(player['now_cost'] for player in squad)
-        print(f"Iteration {iteration}: Squad cost = {squad_cost}")
 
         if squad_cost <= budget:
             break  # Exit loop if budget is satisfied
