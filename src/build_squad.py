@@ -1,16 +1,13 @@
 import json
 
-
 def pick_best_squad(data, budget=1000):
     # Limit the player pool based on the number of players per position sorted by ict_index
     goalkeepers = sorted([p for p in data if p['element_type'] == 1], key=lambda x: float(x['ict_index']),
                          reverse=True)[:10]
-    defenders = sorted([p for p in data if p['element_type'] == 2], key=lambda x: float(x['ict_index']), reverse=True)[
-                :25]
+    defenders = sorted([p for p in data if p['element_type'] == 2], key=lambda x: float(x['ict_index']), reverse=True)[:25]
     midfielders = sorted([p for p in data if p['element_type'] == 3], key=lambda x: float(x['ict_index']),
                          reverse=True)[:25]
-    forwards = sorted([p for p in data if p['element_type'] == 4], key=lambda x: float(x['ict_index']), reverse=True)[
-               :15]
+    forwards = sorted([p for p in data if p['element_type'] == 4], key=lambda x: float(x['ict_index']), reverse=True)[:15]
 
     # Pick the best 2 goalkeepers, 5 defenders, 5 midfielders, and 3 forwards within the budget
     selected_goalkeepers = goalkeepers[:2]
@@ -29,19 +26,20 @@ def pick_best_squad(data, budget=1000):
         squad_cost = sum(player['now_cost'] for player in squad)
 
         if squad_cost <= budget:
+            print("Final Squad Cost: ", squad_cost)
             break  # Exit loop if budget is satisfied
 
-        # If the budget is exceeded, attempt to replace the least expensive player first
-        for player in sorted(squad, key=lambda x: x['now_cost']):
+        # If the budget is exceeded, attempt to replace the player with the least ict_index first
+        for player in sorted(squad, key=lambda x: float(x['ict_index'])):  # Sort by least ict_index
             available_replacements = [p for p in (goalkeepers + defenders + midfielders + forwards)
                                       if p['element_type'] == player['element_type'] and
                                       p not in squad and p['now_cost'] < player['now_cost']]
 
             if available_replacements:
-                # Replace the player with the best available cheaper replacement
+                # Replace the player with the best available replacement based on the highest ict_index
                 replacement = sorted(available_replacements, key=lambda x: float(x['ict_index']), reverse=True)[0]
                 squad[squad.index(player)] = replacement
-                print(player['web_name'], replacement['web_name'])
+                print(f"Replaced {player['web_name']} with {replacement['web_name']}")
                 break
         else:
             # If no valid replacements are found for this player, try replacing the next player on the list
@@ -54,10 +52,10 @@ def pick_best_squad(data, budget=1000):
     selected_forwards = [p for p in squad if p['element_type'] == 4]
 
     best_11 = (
-            sorted(selected_goalkeepers, key=lambda x: float(x['ict_index']), reverse=True)[:1] +
-            sorted(selected_defenders, key=lambda x: float(x['ict_index']), reverse=True)[:3] +
-            sorted(selected_midfielders, key=lambda x: float(x['ict_index']), reverse=True)[:3] +
-            sorted(selected_forwards, key=lambda x: float(x['ict_index']), reverse=True)[:1]
+        sorted(selected_goalkeepers, key=lambda x: float(x['ict_index']), reverse=True)[:1] +
+        sorted(selected_defenders, key=lambda x: float(x['ict_index']), reverse=True)[:3] +
+        sorted(selected_midfielders, key=lambda x: float(x['ict_index']), reverse=True)[:3] +
+        sorted(selected_forwards, key=lambda x: float(x['ict_index']), reverse=True)[:1]
     )
 
     # Ensure no duplicate players in the starting 11
