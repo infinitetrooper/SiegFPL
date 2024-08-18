@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 from get_repo import clone_fpl_repo  # Import the clone function
 
-def load_and_filter_data(min_gw=10, min_minutes=30):
+def load_and_filter_data(min_gw=10, min_minutes=60):
     """
     Loads the CSV file, filters out players who played fewer than the specified minutes in the specified number of game weeks, and returns the filtered DataFrame.
 
