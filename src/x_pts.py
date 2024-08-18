@@ -1,13 +1,15 @@
 from sklearn.linear_model import LinearRegression
-from correlation import load_and_filter_data
+from correlation import load_and_filter_data, load_and_filter_all_seasons_data
 import pandas as pd
+
 
 def calculate_expected_points(df):
     # Ensure the data is sorted by player (element) and game week (GW)
     df = df.sort_values(by=["element", "GW"])
 
     # Calculate the rolling average of ICT index for the last 3 game weeks for all players
-    df["avg_ict_last_3_gw"] = df.groupby("element")["ict_index"].rolling(window=3, min_periods=1).mean().shift(1).reset_index(level=0, drop=True)
+    df["avg_ict_last_3_gw"] = df.groupby("element")["ict_index"].rolling(window=3, min_periods=1).mean().shift(
+        1).reset_index(level=0, drop=True)
 
     # Shift the total points column by -1 for each player to get next game week's points
     df["next_gw_points"] = df.groupby("element")["total_points"].shift(-1)
@@ -39,6 +41,7 @@ def calculate_expected_points(df):
 
     return model.coef_[0], model.intercept_
 
+
 def predict_future_xPts(average_ict, coef, intercept):
     """
     Predicts the expected points (xPts) based on the 3-week average ICT index.
@@ -50,12 +53,13 @@ def predict_future_xPts(average_ict, coef, intercept):
     """
     return (coef * average_ict) + intercept
 
+
 # Example usage
 if __name__ == "__main__":
-    df = load_and_filter_data()
+    df = load_and_filter_all_seasons_data()
     coef, intercept = calculate_expected_points(df)
 
-    # Example: Predict xPts for a player with a 3-week average ICT index of 70
+    # Example: Predict xPts for a player with a 3-week average ICT index.
     average_ict = 15.2
     predicted_xPts = predict_future_xPts(average_ict, coef, intercept)
     print(f"\nPredicted xPts for a player with 3-week average ICT of {average_ict}: {predicted_xPts}")
