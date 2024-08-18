@@ -45,3 +45,6 @@ dist/
 
 # Ignore wheels
 *.whl
+
+#Igore Data Downloads
+fpl-data/
