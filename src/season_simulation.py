@@ -1,6 +1,6 @@
-from get_data import load_and_filter_data
+from load_data import load_and_filter_data
 from x_pts import calculate_expected_points, predict_future_xPts
-from build_squad import pick_best_squad  # Assuming this is where the pick_best_squad function is defined
+from build_squad import pick_best_squad
 
 
 def simulate_fpl_season():

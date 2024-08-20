@@ -1,5 +1,5 @@
 from build_squad import pick_best_squad, get_eligible_players_for_gw
-from get_data import load_and_filter_data
+from load_data import load_and_filter_data
 
 def main():
     # Fetch FPL data

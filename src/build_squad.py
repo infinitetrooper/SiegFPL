@@ -1,4 +1,5 @@
 import pandas as pd
+from load_data import load_latest_data
 
 def pick_best_squad(data, budget=1000, criteria="ict_index", avg_criteria=None, prev_squad=None, transfer_threshold=4):
     """
@@ -109,13 +110,18 @@ def pick_best_squad(data, budget=1000, criteria="ict_index", avg_criteria=None, 
 
 def get_eligible_players_for_gw(gw, merged_gw_df):
     """
-    Returns a DataFrame of eligible players for a given game week, filtering out those from the previous game week,
+    Returns a DataFrame of eligible players for a given game week, loading the latest player data from a local JSON file,
+    and using the latest now_cost instead of value in the returned dataframe. It also filters out players from the previous game week
     and adds the 3-week average ICT index calculated from the previous 3 game weeks.
 
     :param gw: The game week number (e.g., 4)
     :param merged_gw_df: The merged game week DataFrame containing all player data
-    :return: DataFrame of eligible players with the 3-week average ICT index
+    :return: DataFrame of eligible players with the 3-week average ICT index and latest now_cost
     """
+
+    # Load the latest player data from the local JSON file
+    latest_data = load_latest_data()
+
     # Ensure that the game week is greater than 1 to calculate averages
     if gw < 2:
         raise ValueError("Game week must be at least 2 or higher to calculate averages.")
@@ -127,7 +133,9 @@ def get_eligible_players_for_gw(gw, merged_gw_df):
     window_size = 3 if gw >= 4 else gw - 1
 
     # Calculate the rolling average ICT index based on available weeks
-    prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(window=window_size, min_periods=1).mean().shift(1).reset_index(level=0, drop=True)
+    prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(window=window_size,
+                                                                                  min_periods=1).mean().shift(
+        1).reset_index(level=0, drop=True)
 
     # Filter for the current game week
     current_gw_df = merged_gw_df[merged_gw_df["GW"] == gw - 1]
@@ -138,8 +146,16 @@ def get_eligible_players_for_gw(gw, merged_gw_df):
     # Filter out players who did not play in the previous game week
     eligible_df = current_gw_df.dropna(subset=["avg_3w_ict"])
 
-    # Print the number of eligible players
+    # Merge in the latest now_cost from the fetched JSON data
+    latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost"]].rename(columns={"id": "element"})
+    eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left")
+
+    # Replace the old "value" column with the "now_cost"
+    eligible_df["value"] = eligible_df["now_cost"]
+    eligible_df.drop(columns=["now_cost"], inplace=True)
+
+    # Print the number of eligible players before returning
     print(f"Number of eligible players: {len(eligible_df)}")
 
-    # Return the DataFrame with all columns along with the calculated average ICT index
+    # Return the DataFrame with all columns along with the calculated average ICT index and updated now_cost as value
     return eligible_df

@@ -1,4 +1,4 @@
-from get_data import load_and_filter_data, load_and_filter_all_seasons_data
+from load_data import load_and_filter_data, load_and_filter_all_seasons_data
 
 def calculate_ict_to_next_gw_correlation():
     df = load_and_filter_data(min_gw=10, min_minutes=60)

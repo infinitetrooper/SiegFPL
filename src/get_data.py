@@ -1,8 +1,39 @@
-import requests
-import pandas as pd
+import json
 import os
+import shutil
+import requests
+from git import Repo
 from datetime import datetime
-from get_repo import clone_fpl_repo
+
+
+def clone_fpl_repo():
+    # Define the repository URL
+    repo_url = "https://github.com/vaastav/Fantasy-Premier-League.git"
+
+    # Generate the folder name with the current date inside the project root
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    project_root = os.path.dirname(os.path.dirname(__file__))  # Navigate to the project root
+    base_directory = os.path.join(project_root, "fpl-data")
+    folder_name = os.path.join(base_directory, current_date)
+    clone_directory = folder_name
+
+    # Check if today's data already exists
+    if os.path.exists(clone_directory):
+        print(f"Today's data already exists at {clone_directory}. No need to download again.")
+        return clone_directory
+    else:
+        # Delete existing data in `/fpl-data/` if any
+        if os.path.exists(base_directory):
+            shutil.rmtree(base_directory)
+            print(f"Deleted existing data in {base_directory}.")
+
+        # Create the directory structure and clone the repository
+        os.makedirs(clone_directory)
+        Repo.clone_from(repo_url, clone_directory)
+        fetch_api_data()
+        print(f"Repository cloned to {clone_directory}")
+
+    return clone_directory
 
 
 def fetch_api_data():
@@ -11,85 +42,19 @@ def fetch_api_data():
 
     if response.status_code == 200:
         data = response.json()
-        return data['elements']
+
+        # Determine the project root and create the fpl-data directory if it does not exist
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        fpl_data_dir = os.path.join(project_root, "fpl-data")
+        os.makedirs(fpl_data_dir, exist_ok=True)
+
+        # Save the complete JSON response in the fpl-data folder with the current date as the filename
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        file_path = os.path.join(fpl_data_dir, f"{current_date}.json")
+
+        with open(file_path, "w") as json_file:
+            json.dump(data, json_file, indent=4)
+
+        print(f"API data successfully saved to {file_path}")
     else:
         print(f"Failed to fetch data. Status code: {response.status_code}")
-        return None
-
-def get_fpl_data(source='github'):
-    if source == 'api':
-        return fetch_api_data()
-    elif source == 'github':
-        return clone_fpl_repo()
-    else:
-        print("Invalid source specified. Use 'api' or 'github'.")
-        return None
-
-
-def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
-    """
-    Loads the CSV file, filters out players who played fewer than the specified minutes in the specified number of game weeks, and returns the filtered DataFrame.
-
-    :param year: Premier League Season
-    :param min_gw: The minimum number of game weeks a player must have played the specified minutes
-    :param min_minutes: The minimum number of minutes a player must have played in a game week
-    :return: Filtered DataFrame
-    """
-    # Determine the correct file path
-    project_root = os.path.dirname(os.path.dirname(__file__))  # Navigate to the project root
-    current_date = datetime.now().strftime("%Y-%m-%d")
-    file_path = os.path.join(project_root, "fpl-data", current_date, "data", year, "gws", "merged_gw.csv")
-
-    # Check if the file exists, if not, download the repository
-    if not os.path.exists(file_path):
-        print(f"{file_path} does not exist. Cloning the repository...")
-        clone_fpl_repo()  # Call the clone function from the get_repo file
-
-    # Load the CSV file
-    df = pd.read_csv(file_path)
-
-    # Calculate the number of game weeks each player played at least the specified minutes
-    player_gw_count = df[df["minutes"] >= min_minutes].groupby("element")["GW"].count()
-    eligible_players = player_gw_count[player_gw_count >= min_gw].index
-
-    # Print the number of eligible players
-    print(f"Number of eligible players (played at least {min_minutes} minutes in at least {min_gw} game weeks): {len(eligible_players)}")
-
-    # Filter and return the DataFrame with only eligible players
-    return df[df["element"].isin(eligible_players)]
-
-
-def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
-    """
-    Loads the CSV file containing data from multiple seasons, filters out players who played fewer than the specified minutes
-    in the specified number of game weeks, and updates the element_id to be unique per season.
-
-    :param min_gw: The minimum number of game weeks a player must have played the specified minutes
-    :param min_minutes: The minimum number of minutes a player must have played in a game week
-    :return: Filtered DataFrame with unique element_id per season
-    """
-    project_root = os.path.dirname(os.path.dirname(__file__))  # Navigate to the project root
-    current_date = datetime.now().strftime("%Y-%m-%d")
-    file_path = os.path.join(project_root, "fpl-data", current_date, "data", "cleaned_merged_seasons.csv")
-
-    # Check if the file exists, if not, download the repository
-    if not os.path.exists(file_path):
-        print(f"{file_path} does not exist. Cloning the repository...")
-        clone_fpl_repo()  # Call the clone function from the get_repo file
-
-    # Load the CSV file with dtype specified and low_memory=False to avoid DtypeWarning
-    dtype_dict = {"column_name": str}  # Replace "column_name" with the name of the column(s) causing issues
-    df = pd.read_csv(file_path, dtype=dtype_dict, low_memory=False)
-
-    # Update element_id to be unique per season by appending the season
-    df["element"] = df["element"].astype(str) + "-" + df["season_x"]
-
-    # Calculate the number of game weeks each player played at least the specified minutes
-    player_gw_count = df[df["minutes"] >= min_minutes].groupby("element")["GW"].count()
-    eligible_players = player_gw_count[player_gw_count >= min_gw].index
-
-    # Print the number of eligible players
-    print(f"Number of filtered players (played at least {min_minutes} minutes in at least {min_gw} game weeks): {len(eligible_players)}")
-
-    # Filter and return the DataFrame with only eligible players
-    return df[df["element"].isin(eligible_players)]

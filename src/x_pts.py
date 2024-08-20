@@ -1,5 +1,5 @@
 from sklearn.linear_model import LinearRegression
-from get_data import load_and_filter_all_seasons_data
+from load_data import load_and_filter_all_seasons_data
 
 
 def calculate_expected_points(df):
