@@ -106,6 +106,40 @@ def pick_best_squad(data, budget=1000, criteria="ict_index", avg_criteria=None, 
 
     return squad, best_11, captain
 
-# Example usage:
-# For GW 1: squad, best_11, captain = pick_best_squad(df[df["GW"] == gw], budget=1000, criteria="ict_index")
-# For GW 2-38: squad, best_11, captain = pick_best_squad(df[df["GW"] == gw], budget=1000, criteria="ict_index", avg_criteria="avg_ict_last_3_gw", prev_squad=previous_squad)
+
+def get_eligible_players_for_gw(gw, merged_gw_df):
+    """
+    Returns a DataFrame of eligible players for a given game week, filtering out those from the previous game week,
+    and adds the 3-week average ICT index calculated from the previous 3 game weeks.
+
+    :param gw: The game week number (e.g., 4)
+    :param merged_gw_df: The merged game week DataFrame containing all player data
+    :return: DataFrame of eligible players with the 3-week average ICT index
+    """
+    # Ensure that the game week is greater than 1 to calculate averages
+    if gw < 2:
+        raise ValueError("Game week must be at least 2 or higher to calculate averages.")
+
+    # Filter data up to the previous game week (e.g., for GW 4, filter up to GW 3)
+    prev_gw_df = merged_gw_df[merged_gw_df["GW"] < gw]
+
+    # Handle cases where GW is less than 4
+    window_size = 3 if gw >= 4 else gw - 1
+
+    # Calculate the rolling average ICT index based on available weeks
+    prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(window=window_size, min_periods=1).mean().shift(1).reset_index(level=0, drop=True)
+
+    # Filter for the current game week
+    current_gw_df = merged_gw_df[merged_gw_df["GW"] == gw - 1]
+
+    # Add the average ICT index from the previous game weeks to the current game week's DataFrame
+    current_gw_df = pd.merge(current_gw_df, prev_gw_df[["element", "avg_3w_ict"]], on="element", how="left")
+
+    # Filter out players who did not play in the previous game week
+    eligible_df = current_gw_df.dropna(subset=["avg_3w_ict"])
+
+    # Print the number of eligible players
+    print(f"Number of eligible players: {len(eligible_df)}")
+
+    # Return the DataFrame with all columns along with the calculated average ICT index
+    return eligible_df

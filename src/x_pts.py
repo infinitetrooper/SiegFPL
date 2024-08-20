@@ -1,5 +1,6 @@
 from sklearn.linear_model import LinearRegression
-from correlation import load_and_filter_all_seasons_data
+from get_data import load_and_filter_all_seasons_data
+
 
 def calculate_expected_points(df):
     # Ensure the data is sorted by player (element) and game week (GW)

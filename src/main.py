@@ -1,12 +1,13 @@
-from build_squad import pick_best_squad
+from build_squad import pick_best_squad, get_eligible_players_for_gw
 from get_data import load_and_filter_data
 
 def main():
     # Fetch FPL data
-    fpl_data = load_and_filter_data()
+    fpl_data = load_and_filter_data(year="2024-25", min_minutes=0, min_gw=0)
+    eligible_players = get_eligible_players_for_gw(2, fpl_data)
 
     # Build the squad
-    squad, best_11, captain = pick_best_squad(fpl_data)
+    squad, best_11, captain = pick_best_squad(eligible_players)
 
     # Display the squad
     print("Squad of 15:")
