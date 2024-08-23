@@ -1,8 +1,9 @@
 from sklearn.linear_model import LinearRegression
 from load_data import load_and_filter_all_seasons_data
+from src.load_data import load_and_filter_data
 
 
-def calculate_expected_points(df):
+def calculate_expected_points(df=load_and_filter_data(year="2023-24")):
     # Ensure the data is sorted by player (element) and game week (GW)
     df = df.sort_values(by=["element", "GW"])
 
@@ -34,10 +35,6 @@ def calculate_expected_points(df):
     total_points = y.sum()
     print(f"Total points used to train the model: {total_points}")
 
-    # Calculate the average xPts across all players
-    avg_xPts = df["xPts"].mean()
-    print(f"\nAverage Expected Points (xPts) across all players: {avg_xPts}")
-
     return model.coef_[0], model.intercept_
 
 
@@ -55,8 +52,7 @@ def predict_future_xPts(average_ict, coef, intercept):
 
 # Example usage
 if __name__ == "__main__":
-    df = load_and_filter_all_seasons_data()
-    coef, intercept = calculate_expected_points(df)
+    coef, intercept = calculate_expected_points()
 
     # Example: Predict xPts for a player with a 3-week average ICT index.
     average_ict = 15.2
