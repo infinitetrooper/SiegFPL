@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import os
 from datetime import datetime
-from get_data import clone_fpl_repo
+from get_data import clone_fpl_repo, fetch_team_gw_data
 
 
 def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
@@ -96,3 +96,41 @@ def load_latest_data():
             return data['elements']
     else:
         raise FileNotFoundError(f"Data file not found: {file_path}")
+
+
+def load_team_data(gw, team_id=1365773):
+    """
+    Loads the saved FPL data from {project root}/fpl-data into a Pandas DataFrame using today's date.
+    If the file does not exist, it fetches the data first and then loads it.
+
+    Args:
+        team_id (int): The team ID.
+        gw (int): The game week.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the FPL data.
+    """
+    # Get today's date in the format YYYY-MM-DD
+    current_date = datetime.now().strftime("%Y-%m-%d")
+
+    # Determine the project root and the file path
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    fpl_data_dir = os.path.join(project_root, "fpl-data")
+    file_path = os.path.join(fpl_data_dir, f"{team_id}_gw_{gw}_{current_date}.json")
+
+    # Check if the file exists, if not fetch the data
+    if not os.path.exists(file_path):
+        print(f"Data file not found for team {team_id} in GW {gw}. Fetching data...")
+        fetch_team_gw_data(team_id, gw)  # Fetch the data if it doesn't exist
+
+    # Load the JSON data
+    with open(file_path, "r") as json_file:
+        data = json.load(json_file)
+
+    # Convert the JSON data to a Pandas DataFrame
+    picks = data.get("picks", [])
+    df = pd.DataFrame(picks)
+
+    print(f"Data loaded from {file_path}")
+
+    return df

@@ -1,10 +1,12 @@
 from build_squad import pick_best_squad, get_eligible_players_for_gw
-from load_data import load_and_filter_data
+from load_data import load_and_filter_data, load_team_data
 
 def main():
     # Fetch FPL data
+    gw = get_game_week()
     fpl_data = load_and_filter_data(year="2024-25", min_minutes=0, min_gw=0)
-    eligible_players = get_eligible_players_for_gw(2, fpl_data)
+    eligible_players = get_eligible_players_for_gw(gw, fpl_data)
+    current_team = load_team_data(gw=gw-1)
 
     # Build the squad
     squad, best_11, captain = pick_best_squad(eligible_players)
@@ -42,6 +44,23 @@ def main():
 
     # Display the predicted points for the game week
     print(f"\nPredicted Points for the Game Week: {predicted_points:.2f}")
+
+def get_game_week():
+    """
+    Prompts the user to input the game week number and returns it as an integer.
+
+    Returns:
+        int: The game week number entered by the user.
+    """
+    while True:
+        try:
+            gw = int(input("Enter the game week (e.g., 1, 2, 3): "))
+            if gw < 1:
+                print("Game week must be a positive number. Please try again.")
+            else:
+                return gw
+        except ValueError:
+            print("Invalid input. Please enter a valid game week number.")
 
 if __name__ == "__main__":
     main()

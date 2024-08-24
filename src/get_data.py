@@ -5,7 +5,6 @@ import requests
 from git import Repo
 from datetime import datetime
 
-
 def clone_fpl_repo():
     # Define the repository URL
     repo_url = "https://github.com/vaastav/Fantasy-Premier-League.git"
@@ -31,6 +30,7 @@ def clone_fpl_repo():
         os.makedirs(clone_directory)
         Repo.clone_from(repo_url, clone_directory)
         fetch_api_data()
+
         print(f"Repository cloned to {clone_directory}")
 
     return clone_directory
@@ -58,3 +58,48 @@ def fetch_api_data():
         print(f"API data successfully saved to {file_path}")
     else:
         print(f"Failed to fetch data. Status code: {response.status_code}")
+
+def fetch_team_gw_data(gw, team_id=1365773):
+    """
+    Fetches FPL data for a specific team ID and game week, and stores it in the {project root}/fpl-data directory.
+
+    Args:
+        team_id (int): The team ID.
+        gw (int): The game week.
+
+    Returns:
+        None
+    """
+    # Construct the URL with the provided team_id and game week (gw)
+    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/{gw}/picks/"
+
+    # Send a GET request to fetch the data
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+
+        # Determine the project root and create the fpl-data directory if it does not exist
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        fpl_data_dir = os.path.join(project_root, "fpl-data")
+        os.makedirs(fpl_data_dir, exist_ok=True)
+
+        # Determine the file path
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        file_path = os.path.join(fpl_data_dir, f"{team_id}_gw_{gw}_{current_date}.json")
+
+        # Check if the file already exists, and delete it if it does
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print(f"Existing file {file_path} deleted.")
+
+        # Save the new JSON response to the file
+        with open(file_path, "w") as json_file:
+            json.dump(data, json_file, indent=4)
+
+        print(f"Data for team {team_id} in GW {gw} successfully saved to {file_path}")
+    else:
+        print(f"Failed to fetch data. Status code: {response.status_code}")
+
+if __name__ == "__main__":
+    fetch_team_gw_data(gw=1)
