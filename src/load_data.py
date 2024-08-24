@@ -134,3 +134,27 @@ def load_team_data(gw, team_id=1365773):
     print(f"Data loaded from {file_path}")
 
     return df
+
+
+def create_current_team_df(picks_df, player_data):
+    """
+    Creates the current team DataFrame by filtering the player data using the 'element' field from the picks DataFrame.
+
+    Args:
+        picks_df (pd.DataFrame): A DataFrame representing the picks data.
+        player_data (pd.DataFrame): The player data containing details for all available players.
+
+    Returns:
+        pd.DataFrame: The filtered current team DataFrame.
+    """
+    # Ensure picks_df is a DataFrame
+    if not isinstance(picks_df, pd.DataFrame):
+        raise TypeError("Expected picks_data to be a DataFrame.")
+
+    # Extract the elements from picks_df
+    elements = picks_df['element'].tolist()
+
+    # Filter the player_data based on these elements
+    current_team_df = player_data[player_data['element'].isin(elements)].copy()
+
+    return current_team_df
