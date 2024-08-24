@@ -1,57 +1,50 @@
+from statistics import correlation
+
 from sklearn.linear_model import LinearRegression
 from src.load_data import load_and_filter_data, load_and_filter_all_seasons_data
 import pandas as pd
 
-def calculate_expected_points(df=load_and_filter_all_seasons_data()):
+def calculate_expected_points(df=load_and_filter_data(), criteria="ict_index"):
+    """
+    Calculates the expected points based on the selected criteria for each position.
+
+    :param df: The input DataFrame containing the filtered game week data.
+    :param criteria: The criteria (column) for which to calculate rolling averages and fit models.
+    :return: A dictionary with position-based models and coefficients.
+    """
     # Ensure the data is sorted by player (element) and game week (GW)
     df = df.sort_values(by=["element", "GW"])
 
-    # Drop duplicates if they exist, keeping only the first instance
-    df = df.drop_duplicates(subset=["element", "GW"])
-    print(f"Total rows after removing duplicates: {len(df)}")
+    # Calculate the rolling average for the criteria for the last 3 game weeks
+    rolling_avg_column = f"avg_3w_{criteria}"
+    df[rolling_avg_column] = df.groupby("element")[criteria].rolling(window=3, min_periods=1).mean().shift(1).reset_index(level=0, drop=True)
 
-    # Filter out players who have not played any minutes in a game week
-    df = df[df["minutes"] > 0]
-    print(f"After filtering out players with 0 minutes: {len(df)} rows")
-
-    # Calculate the rolling average of ICT index for the last 3 game weeks for each player
-    df["avg_ict_last_3_gw"] = df.groupby("element")["ict_index"].rolling(window=3, min_periods=1).mean().shift(1).reset_index(level=0, drop=True)
-    print(f"After calculating rolling averages: {len(df)} rows")
-
-    # Filter out rows where avg_ict_last_3_gw is NaN or 0
-    df = df.dropna(subset=["avg_ict_last_3_gw"])
-    df = df[df["avg_ict_last_3_gw"] != 0]
-    print(f"After filtering out NaN or 0 avg_ict_last_3_gw: {len(df)} rows")
+    # Filter out rows where the rolling average is NaN or 0
+    df = df.dropna(subset=[rolling_avg_column])
+    df = df[df[rolling_avg_column] != 0]
 
     # Split data by position
     position_groups = df.groupby("position")
 
     # Store models and coefficients for each position
-    models = {}
     position_coefficients = {}
 
     for position, group in position_groups:
-        print(f"\nPosition: {position} | Number of players: {group['element'].nunique()} | Total game weeks: {group['GW'].count()}")
-        print(f"Number of data points for {position}: {len(group)}")
-
-        # For each position, correlate the last 3 weeks' ICT index average with the current game week's points
-        X = group["avg_ict_last_3_gw"].values.reshape(-1, 1)
-        y = group["total_points"].values  # Use current game week's points directly
+        # For each position, correlate the last 3 weeks' average criteria with the current game week's points
+        X = group[rolling_avg_column].values.reshape(-1, 1)
+        y = group["total_points"].values
 
         model = LinearRegression()
         model.fit(X, y)
 
         # Store the model and coefficients for this position
-        models[position] = model
-        position_coefficients[position] = {"coef": model.coef_[0], "intercept": model.intercept_}
+        position_coefficients[position] = {
+            "coef": model.coef_[0],
+            "intercept": model.intercept_,
+            "correlation": model.score(X, y)
+        }
 
-        # Calculate expected points (xPts) for players in this position
-        df.loc[df["position"] == position, "xPts"] = model.predict(X)
-
-        # Print the model coefficients and final points used
-        print(f"Model Coefficient (ICT Index Impact): {model.coef_[0]}")
-        print(f"Model Intercept: {model.intercept_}")
-        print(f"Total points used to train the model for {position}: {y.size}")
+        print(f"Position: {position} | Criteria: {criteria} | Coefficient: {model.coef_[0]} | Intercept: {model.intercept_} | Points Trained: {y.size}")
 
     return position_coefficients
 
