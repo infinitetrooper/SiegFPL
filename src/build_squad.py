@@ -31,8 +31,13 @@ def get_eligible_players_for_gw(gw, merged_gw_df):
     eligible_df["value"] = eligible_df["now_cost"]
     eligible_df.drop(columns=["now_cost"], inplace=True)
 
-    coef, intercept = calculate_expected_points()
-    eligible_df["xPts"] = eligible_df["avg_3w_ict"].apply(lambda x: round(predict_future_xPts(x, coef, intercept), 2))
+    # Calculate position-based coefficients and intercepts
+    position_coefficients = calculate_expected_points()
+
+    # Calculate xPts for each player based on their position and 3-week average ICT index
+    eligible_df["xPts"] = eligible_df.apply(
+        lambda row: round(predict_future_xPts(row["avg_3w_ict"], row["position"], position_coefficients), 2), axis=1
+    )
 
     print(f"Number of eligible players: {len(eligible_df)}")
     return eligible_df
