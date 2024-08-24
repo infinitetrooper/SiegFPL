@@ -67,9 +67,6 @@ def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
     player_gw_count = df[df["minutes"] >= min_minutes].groupby("element")["GW"].count()
     eligible_players = player_gw_count[player_gw_count >= min_gw].index
 
-    # Print the number of eligible players
-    print(f"Number of filtered players (played at least {min_minutes} minutes in at least {min_gw} game weeks): {len(eligible_players)}")
-
     # Filter and return the DataFrame with only eligible players
     return df[df["element"].isin(eligible_players)]
 

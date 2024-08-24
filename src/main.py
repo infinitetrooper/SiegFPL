@@ -1,4 +1,4 @@
-from build_squad import pick_best_squad, get_eligible_players_for_gw, calculate_total_expected_points
+from build_squad import pick_best_squad, get_eligible_players_for_gw
 from load_data import load_and_filter_data, load_team_data
 
 def main():
@@ -9,7 +9,7 @@ def main():
     current_team = load_team_data(gw=gw-1)
 
     # Build the squad
-    squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team)
+    squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=None)
 
     # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
     predicted_points = best_11["xPts"].sum() + captain["xPts"]
@@ -21,8 +21,7 @@ def main():
             f"{player['web_name' if 'web_name' in player else 'name']} - "
             f"Position: {player['position' if 'position' in player else 'element_type']} - "
             f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
-            f"xPts: {player['xPts']} - "
-            f"Predicted Points (ICT): {round(player['ict_index'], 2)}"
+            f"xPts: {player['xPts']}"
         )
 
     # Display the best starting 11
@@ -32,14 +31,14 @@ def main():
             f"{player['web_name' if 'web_name' in player else 'name']} - "
             f"Position: {player['position' if 'position' in player else 'element_type']} - "
             f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
-            f"xPts: {player['xPts']} - "
+            f"xPts: {player['xPts']}"
         )
 
     # Display the captain
     print(
         f"\nCaptain: {captain['web_name' if 'web_name' in captain else 'name']} - "
         f"xPts: {captain['xPts']} - "
-        f"Cost: {captain['now_cost' if 'now_cost' in captain else 'value']} - "
+        f"Cost: {captain['now_cost' if 'now_cost' in captain else 'value']}"
     )
 
     # Display the predicted points for the game week
