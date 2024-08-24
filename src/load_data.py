@@ -7,7 +7,8 @@ from get_data import clone_fpl_repo, fetch_team_gw_data
 
 def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     """
-    Loads the CSV file, filters out players who played fewer than the specified minutes in the specified number of game weeks, and returns the filtered DataFrame.
+    Loads the CSV file, filters out players who played fewer than the specified minutes in the specified number of game weeks,
+    and returns the filtered DataFrame with "GKP" converted to "GK".
 
     :param year: Premier League Season
     :param min_gw: The minimum number of game weeks a player must have played the specified minutes
@@ -27,12 +28,15 @@ def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     # Load the CSV file
     df = pd.read_csv(file_path)
 
+    # Convert "GKP" to "GK" in the position column
+    df["position"] = df["position"].replace("GKP", "GK")
+
     # Calculate the number of game weeks each player played at least the specified minutes
     player_gw_count = df[df["minutes"] >= min_minutes].groupby("element")["GW"].count()
     eligible_players = player_gw_count[player_gw_count >= min_gw].index
 
     # Print the number of eligible players
-    print(f"Number of filtered players (played at least {min_minutes} minutes in at least {min_gw} game weeks): {len(eligible_players)}")
+    print(f"Number of filtered players for {year} who (played at least {min_minutes} minutes in at least {min_gw} game weeks): {len(eligible_players)}")
 
     # Filter and return the DataFrame with only eligible players
     return df[df["element"].isin(eligible_players)]
@@ -41,7 +45,7 @@ def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
 def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
     """
     Loads the CSV file containing data from multiple seasons, filters out players who played fewer than the specified minutes
-    in the specified number of game weeks, and updates the element_id to be unique per season.
+    in the specified number of game weeks, converts "GKP" to "GK", and updates the element_id to be unique per season.
 
     :param min_gw: The minimum number of game weeks a player must have played the specified minutes
     :param min_minutes: The minimum number of minutes a player must have played in a game week
@@ -59,6 +63,9 @@ def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
     # Load the CSV file with dtype specified and low_memory=False to avoid DtypeWarning
     dtype_dict = {"column_name": str}  # Replace "column_name" with the name of the column(s) causing issues
     df = pd.read_csv(file_path, dtype=dtype_dict, low_memory=False)
+
+    # Convert "GKP" to "GK" in the position column
+    df["position"] = df["position"].replace("GKP", "GK")
 
     # Update element_id to be unique per season by appending the season
     df["element"] = df["element"].astype(str) + "-" + df["season_x"]
