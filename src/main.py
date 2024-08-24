@@ -9,18 +9,39 @@ def main():
     # Build the squad
     squad, best_11, captain = pick_best_squad(eligible_players)
 
+    # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
+    predicted_points = best_11["xPts"].sum() + captain["xPts"]
+
     # Display the squad
     print("Squad of 15:")
     for _, player in squad.iterrows():
-        print(f"{player['web_name' if 'web_name' in player else 'name']} - Position: {player['position' if 'position' in player else 'element_type']} - Cost: {player['now_cost' if 'now_cost' in player else 'value']} - ICT Index: {player['ict_index']}")
+        print(
+            f"{player['web_name' if 'web_name' in player else 'name']} - "
+            f"Position: {player['position' if 'position' in player else 'element_type']} - "
+            f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
+            f"xPts: {player['xPts']} - "
+            f"Predicted Points (ICT): {round(player['ict_index'], 2)}"
+        )
 
     # Display the best starting 11
     print("\nBest Starting 11:")
     for _, player in best_11.iterrows():
-        print(f"{player['web_name' if 'web_name' in player else 'name']} - Position: {player['position' if 'position' in player else 'element_type']} - ICT Index: {player['ict_index']}")
+        print(
+            f"{player['web_name' if 'web_name' in player else 'name']} - "
+            f"Position: {player['position' if 'position' in player else 'element_type']} - "
+            f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
+            f"xPts: {player['xPts']} - "
+        )
 
     # Display the captain
-    print(f"\nCaptain: {captain['web_name' if 'web_name' in captain else 'name']} - ICT Index: {captain['ict_index']} (Double Points)")
+    print(
+        f"\nCaptain: {captain['web_name' if 'web_name' in captain else 'name']} - "
+        f"xPts: {captain['xPts']} - "
+        f"Cost: {captain['now_cost' if 'now_cost' in captain else 'value']} - "
+    )
+
+    # Display the predicted points for the game week
+    print(f"\nPredicted Points for the Game Week: {predicted_points:.2f}")
 
 if __name__ == "__main__":
     main()

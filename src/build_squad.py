@@ -9,14 +9,25 @@ def get_eligible_players_for_gw(gw, merged_gw_df):
     if gw < 2:
         raise ValueError("Game week must be at least 2 or higher to calculate averages.")
 
+    # Filter data up to the previous game week (e.g., for GW 4, filter up to GW 3)
     prev_gw_df = merged_gw_df[merged_gw_df["GW"] < gw]
-    window_size = 3 if gw >= 4 else gw - 1
-    prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(window=window_size, min_periods=1).mean().shift(1).reset_index(level=0, drop=True)
 
+    # Handle cases where GW is less than 4
+    window_size = 3 if gw >= 4 else gw - 1
+
+    # Calculate the rolling average ICT index correctly by grouping by 'element' first
+    prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(window=window_size, min_periods=1).mean().reset_index(level=0, drop=True)
+
+    # Filter for the current game week
     current_gw_df = merged_gw_df[merged_gw_df["GW"] == gw - 1]
+
+    # Merge the 3-week average ICT index into the current game week’s data
     current_gw_df = pd.merge(current_gw_df, prev_gw_df[["element", "avg_3w_ict"]], on="element", how="left")
+
+    # Filter out players who did not play in the previous game week
     eligible_df = current_gw_df.dropna(subset=["avg_3w_ict"])
 
+    # Merge in the latest now_cost and chance_of_playing_next_round from the fetched JSON data
     latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(columns={"id": "element"})
     eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left")
 
