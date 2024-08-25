@@ -102,7 +102,7 @@ def load_latest_data():
         raise FileNotFoundError(f"Data file not found: {file_path}")
 
 
-def load_team_data(gw, team_id=1365773):
+def load_team_data(gw=1, team_id=1365773):
     """
     Loads the saved FPL data from {project root}/fpl-data into a Pandas DataFrame using today's date.
     If the file does not exist, it fetches the data first and then loads it.
@@ -127,18 +127,27 @@ def load_team_data(gw, team_id=1365773):
         print(f"Data file not found for team {team_id} in GW {gw}. Fetching data...")
         fetch_team_gw_data(team_id, gw)  # Fetch the data if it doesn't exist
 
+        # Double-check if the file was saved correctly
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Failed to fetch data for team {team_id} in GW {gw}. File not found after fetch attempt.")
+
     # Load the JSON data
-    with open(file_path, "r") as json_file:
-        data = json.load(json_file)
+    try:
+        with open(file_path, "r") as json_file:
+            data = json.load(json_file)
+    except Exception as e:
+        raise FileNotFoundError(f"Failed to load data from {file_path}: {str(e)}")
 
     # Convert the JSON data to a Pandas DataFrame
     picks = data.get("picks", [])
+    if not picks:
+        raise ValueError(f"No picks data found in the loaded file for team {team_id} in GW {gw}.")
+
     df = pd.DataFrame(picks)
 
     print(f"Data loaded from {file_path}")
 
     return df
-
 
 def create_current_team_df(picks_df, player_data):
     """
@@ -162,3 +171,6 @@ def create_current_team_df(picks_df, player_data):
     current_team_df = player_data[player_data['element'].isin(elements)].copy()
 
     return current_team_df
+
+if __name__ == "__main__":
+    load_team_data()

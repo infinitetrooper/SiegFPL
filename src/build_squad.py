@@ -3,12 +3,10 @@ from x_pts import calculate_expected_points, predict_future_xPts
 from load_data import load_latest_data, create_current_team_df
 
 
-def get_eligible_players_for_gw(gw, merged_gw_df):
+def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=load_latest_data()):
     """
     Returns a DataFrame of eligible players for a given game week, with additional calculations like average 3-week ICT index and expected points (xPts).
     """
-    latest_data = load_latest_data()
-
     if gw < 2:
         raise ValueError("Game week must be at least 2 or higher to calculate averages.")
 
@@ -60,7 +58,7 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
     else:
         # Use the handle_transfers function to update the squad
         current_team = create_current_team_df(picks_df=prev_squad, player_data=player_data)
-        squad = handle_transfers(current_team, player_data, free_transfers, transfer_penalty, criteria)
+        squad = handle_transfers(player_data, current_team, free_transfers, transfer_penalty, criteria)
 
     # Ensure squad is not None before proceeding
     if squad is None or squad.empty:
@@ -122,7 +120,7 @@ def select_new_squad(player_data, budget, cost_column, criteria):
 
     return squad if not squad.empty else None
 
-def handle_transfers(current_team, player_data, free_transfers, transfer_penalty, criteria="xPts", xPts_threshold=4):
+def handle_transfers(player_data, prev_squad, free_transfers, transfer_penalty, criteria="xPts", xPts_threshold=4):
     """
     Suggests transfers to improve an existing team based on given criteria.
     """
@@ -130,31 +128,31 @@ def handle_transfers(current_team, player_data, free_transfers, transfer_penalty
     name_column = "web_name" if "web_name" in player_data.columns else "name"
 
     player_data = player_data.sort_values(by=criteria, ascending=False)
-    initial_cost = current_team[cost_column].sum()
+    initial_cost = max(1000, prev_squad[cost_column].sum())
     total_transfers = 0
     transfers = []
 
     # First round: Make transfers using free transfers to improve the team
-    for _, player in current_team.iterrows():
+    for _, player in prev_squad.iterrows():
         potential_replacements = player_data[(player_data['position'] == player['position']) &
-                                             (~player_data.index.isin(current_team.index)) &
+                                             (~player_data.index.isin(prev_squad.index)) &
                                              (player_data[cost_column] <= player[cost_column])]
 
         if not potential_replacements.empty:
             best_replacement = potential_replacements.sort_values(by=criteria, ascending=False).iloc[0]
             if best_replacement[criteria] > player[criteria]:
                 transfers.append((player[name_column], best_replacement[name_column]))
-                current_team = current_team.drop(player.name)
-                current_team = pd.concat([current_team, best_replacement.to_frame().T])
+                prev_squad = prev_squad.drop(player.name)
+                prev_squad = pd.concat([prev_squad, best_replacement.to_frame().T])
                 total_transfers += 1
 
                 if total_transfers >= free_transfers:
                     break
 
     # Second round: Make additional transfers only if xPts improvement is above the threshold
-    for _, player in current_team.iterrows():
+    for _, player in prev_squad.iterrows():
         potential_replacements = player_data[(player_data['position'] == player['position']) &
-                                             (~player_data.index.isin(current_team.index)) &
+                                             (~player_data.index.isin(prev_squad.index)) &
                                              (player_data[cost_column] <= player[cost_column])]
 
         if not potential_replacements.empty:
@@ -163,8 +161,8 @@ def handle_transfers(current_team, player_data, free_transfers, transfer_penalty
 
             if xPts_difference > xPts_threshold:
                 transfers.append((player[name_column], best_replacement[name_column]))
-                current_team = current_team.drop(player.name)
-                current_team = pd.concat([current_team, best_replacement.to_frame().T])
+                prev_squad = prev_squad.drop(player.name)
+                prev_squad = pd.concat([prev_squad, best_replacement.to_frame().T])
                 total_transfers += 1
 
     if total_transfers > free_transfers:
@@ -172,12 +170,12 @@ def handle_transfers(current_team, player_data, free_transfers, transfer_penalty
     else:
         total_penalty = 0
 
-    while current_team[cost_column].sum() > initial_cost:
-        lowest_xPts_player = current_team.sort_values(by=criteria).iloc[0]
-        current_team = current_team.drop(lowest_xPts_player.name)
+    while prev_squad[cost_column].sum() > initial_cost:
+        lowest_xPts_player = prev_squad.sort_values(by=criteria).iloc[0]
+        prev_squad = prev_squad.drop(lowest_xPts_player.name)
 
     print(f"Total transfers made: {total_transfers}, Transfer penalty: {total_penalty} points")
-    return current_team
+    return prev_squad
 
 def select_best_11(squad, criteria="xPts"):
     """

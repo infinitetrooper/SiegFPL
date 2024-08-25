@@ -1,61 +1,54 @@
-from load_data import load_and_filter_data
-from x_pts import calculate_expected_points, predict_future_xPts
-from build_squad import pick_best_squad
+import pandas as pd
+from src.x_pts import calculate_expected_points, predict_future_xPts
+from src.load_data import load_and_filter_data, load_team_data
+from src.build_squad import pick_best_squad, handle_transfers, select_best_11, get_eligible_players_for_gw
+import gc
 
 
-def simulate_fpl_season():
-    # Load data for the 2023-24 season
-    df = load_and_filter_data(year="2023-24")
-
-    # Model expected points (xPts)
-    coef, intercept = calculate_expected_points(df)
-
-    # Initialize variables for simulation
+def simulate_season_2023_24():
+    # Load the initial data for the season
+    season_data = load_and_filter_data(year="2023-24")
     total_points = 0
-    previous_squad = None
+    initial_budget = 1000
+    free_transfers = 1
+    transfer_penalty = 4
+    current_team = None
 
-    # Loop through each game week
-    for gw in range(1, 39):  # GW 1 to GW 38
-        print(f"Simulating Game Week {gw}...")
+    for gw in range(1, 39):
+        print(f"\nProcessing Gameweek {gw}...")
 
         if gw == 1:
-            # For GW 1, pick the best squad based on highest ICT index
-            squad, starting_11, captain = pick_best_squad(df[df["GW"] == gw], budget=1000, criteria="total_points")
+            # For GW1, directly use ict_index to pick the initial squad
+            eligible_players = season_data[season_data["GW"] == gw]
+            criteria = "ict_index"
+            squad, best_11, captain = pick_best_squad(player_data=eligible_players, budget=initial_budget,
+                                                      criteria=criteria)
         else:
-            # From GW 2 onwards, calculate 3-week average ICT
-            df["avg_ict_last_3_gw"] = df.groupby("element")["ict_index"].rolling(window=3, min_periods=1).mean().shift(
-                1).reset_index(level=0, drop=True)
+            # Get eligible players for the gameweek and the current team
+            eligible_players = get_eligible_players_for_gw(gw, season_data, season_data[season_data["GW"] == gw])
 
-            df["xPts"] = predict_future_xPts(df["avg_ict_last_3_gw"], coef, intercept)
+            # Build the squad for the week using previous data and transfers
+            squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team)
 
-            # Pick the squad based on 3-week average ICT and xPts
-            squad, starting_11, captain = pick_best_squad(
-                df[df["GW"] == gw],
-                budget=1000,
-                criteria="ict_index",
-                avg_criteria="avg_ict_last_3_gw",
-                prev_squad=previous_squad,
-                transfer_threshold=4
-            )
+        # Calculate the actual points for the best 11 players in this gameweek, with captain points doubled
+        gw_actual_points = best_11["total_points"].sum() + captain["total_points"]
+        total_points += gw_actual_points
 
-        # Calculate points for the starting 11 in the current game week
-        gw_points = sum([player["total_points"] for _, player in starting_11.iterrows()])
+        print(f"Points for GW{gw}: {gw_actual_points}")
 
-        # Double the points for the captain
-        gw_points += captain["total_points"]
+        # Update the current team for the next gameweek
+        current_team = squad.copy()
 
-        print(gw_points)
+        # Clear data frames after each loop to manage memory
+        del eligible_players, squad, best_11, captain
+        gc.collect()
 
-        # Add the game week points to the total points
-        total_points += gw_points
+    # Print the total points accumulated for the season
+    print(f"\nTotal points for the 2023-24 season: {total_points}")
 
-        # Update the previous squad for the next iteration
-        previous_squad = squad
-
-    # Return the total points earned across all game weeks
     return total_points
 
 
 if __name__ == "__main__":
-    total_score = simulate_fpl_season()
-    print(f"Total Score for the 2023-24 Season: {total_score}")
+    # Run the simulation
+    simulate_season_2023_24()
