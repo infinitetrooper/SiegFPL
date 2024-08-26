@@ -102,4 +102,4 @@ def fetch_team_gw_data(gw, team_id=1365773):
         print(f"Failed to fetch data. Status code: {response.status_code}")
 
 if __name__ == "__main__":
-    fetch_team_gw_data(gw=1)
+    fetch_team_gw_data(gw=2)

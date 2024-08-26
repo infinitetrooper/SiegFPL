@@ -10,29 +10,55 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=load_latest_data()
     if gw < 2:
         raise ValueError("Game week must be at least 2 or higher to calculate averages.")
 
-    prev_gw_df = merged_gw_df[merged_gw_df["GW"] < gw]
+    # Step 1: Calculate avg_3w_ict ending gw - 1
+    prev_gw_df = merged_gw_df[merged_gw_df["GW"] < gw].copy()  # Explicit copy to avoid chained assignment issues
     window_size = 3 if gw >= 4 else gw - 1
 
-    prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(window=window_size,
-                                                                                  min_periods=1).mean().reset_index(
-        level=0, drop=True)
+    # Step 1: Filter the current game week data
+    current_gw_df = merged_gw_df[merged_gw_df["GW"] == gw - 1].copy()
 
-    current_gw_df = merged_gw_df[merged_gw_df["GW"] == gw - 1]
-    current_gw_df = pd.merge(current_gw_df, prev_gw_df[["element", "avg_3w_ict"]], on="element", how="left")
+    # Step 2: Calculate the avg_3w_ict
+    prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(
+        window=window_size, min_periods=1
+    ).mean().reset_index(level=0, drop=True)
+
+    # Step 3: Filter prev_gw_df to only include rows where both element and GW are in current_gw_df
+    filtered_prev_gw_df = prev_gw_df[
+        prev_gw_df.set_index(["element", "GW"]).index.isin(current_gw_df.set_index(["element", "GW"]).index)
+    ].copy()
+
+    # Step 4: Merge the avg_3w_ict back into the current game week data
+    current_gw_df = pd.merge(
+        current_gw_df,
+        filtered_prev_gw_df[["element", "avg_3w_ict"]],
+        on="element",
+        how="left"
+    )
+
+    # Step 5: Filter out rows where avg_3w_ict is NaN or <= 0
     eligible_df = current_gw_df.dropna(subset=["avg_3w_ict"])
+    eligible_df = eligible_df[eligible_df["avg_3w_ict"] > 0].copy()
 
-    latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(
-        columns={"id": "element"})
-    eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left")
+    if latest_data is not None:
+        # Convert latest_data into a DataFrame with relevant columns
+        latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(
+            columns={"id": "element"}
+        )
 
-    eligible_df["chance_of_playing_next_round"] = eligible_df["chance_of_playing_next_round"].fillna(100)
-    eligible_df["value"] = eligible_df["now_cost"]
-    eligible_df.drop(columns=["now_cost"], inplace=True)
+        # Merge eligible_df with latest_cost_df on the element column
+        eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left")
 
-    # Calculate position-based coefficients and intercepts
+        # Fill missing values for "chance_of_playing_next_round" with 100
+        eligible_df["chance_of_playing_next_round"] = eligible_df["chance_of_playing_next_round"].fillna(100)
+
+        # Assign the "value" column as "now_cost"
+        eligible_df["value"] = eligible_df["now_cost"]
+
+        # Drop the "now_cost" column as it's no longer needed
+        eligible_df.drop(columns=["now_cost"], inplace=True)
+
+    # Step 3: Add xPts for these players
     position_coefficients = calculate_expected_points()
-
-    # Calculate xPts for each player based on their position and 3-week average ICT index
     eligible_df["xPts"] = eligible_df.apply(
         lambda row: round(predict_future_xPts(row["avg_3w_ict"], row["position"], position_coefficients), 2), axis=1
     )
@@ -120,61 +146,62 @@ def select_new_squad(player_data, budget, cost_column, criteria):
 
     return squad if not squad.empty else None
 
-def handle_transfers(player_data, prev_squad, free_transfers, transfer_penalty, criteria="xPts", xPts_threshold=4):
+def handle_transfers(player_data, prev_squad, free_transfers, transfer_penalty, criteria="xPts"):
     """
     Suggests transfers to improve an existing team based on given criteria.
+
+    1. Performs free transfers within the same position and budget to improve xPts.
+    2. After free transfers, performs additional transfers within the same position and budget if xPts improvement justifies the transfer penalty.
+    3. Considers the overall squad cost during each transfer to ensure it stays within the budget.
     """
     cost_column = "now_cost" if "now_cost" in player_data.columns else "value"
     name_column = "web_name" if "web_name" in player_data.columns else "name"
 
     player_data = player_data.sort_values(by=criteria, ascending=False)
-    initial_cost = max(1000, prev_squad[cost_column].sum())
     total_transfers = 0
-    transfers = []
+    max_budget = max(1000, prev_squad[cost_column].sum())  # Set the maximum budget based on the current squad cost
 
-    # First round: Make transfers using free transfers to improve the team
+    # First round: Make free transfers to improve the team
     for _, player in prev_squad.iterrows():
-        potential_replacements = player_data[(player_data['position'] == player['position']) &
-                                             (~player_data.index.isin(prev_squad.index)) &
-                                             (player_data[cost_column] <= player[cost_column])]
+        potential_replacements = player_data[
+            (player_data['position'] == player['position']) &
+            (~player_data.index.isin(prev_squad.index)) &
+            (player_data[criteria] > player[criteria])
+        ]
 
-        if not potential_replacements.empty:
-            best_replacement = potential_replacements.sort_values(by=criteria, ascending=False).iloc[0]
-            if best_replacement[criteria] > player[criteria]:
-                transfers.append((player[name_column], best_replacement[name_column]))
-                prev_squad = prev_squad.drop(player.name)
-                prev_squad = pd.concat([prev_squad, best_replacement.to_frame().T])
+        for _, replacement in potential_replacements.iterrows():
+            updated_squad = prev_squad.drop(player.name)
+            updated_squad = pd.concat([updated_squad, replacement.to_frame().T])
+
+            # Ensure the updated squad remains within the original budget
+            if updated_squad[cost_column].sum() <= max_budget:
+                prev_squad = updated_squad
                 total_transfers += 1
+                break  # Break out once a valid replacement is found
 
-                if total_transfers >= free_transfers:
-                    break
+        if total_transfers >= free_transfers:
+            break  # Stop once free transfers are exhausted
 
-    # Second round: Make additional transfers only if xPts improvement is above the threshold
+    # Second round: Make additional transfers if the improvement justifies the transfer penalty
     for _, player in prev_squad.iterrows():
-        potential_replacements = player_data[(player_data['position'] == player['position']) &
-                                             (~player_data.index.isin(prev_squad.index)) &
-                                             (player_data[cost_column] <= player[cost_column])]
+        potential_replacements = player_data[
+            (player_data['position'] == player['position']) &
+            (~player_data.index.isin(prev_squad.index)) &
+            (player_data[criteria] > player[criteria])
+        ]
 
-        if not potential_replacements.empty:
-            best_replacement = potential_replacements.sort_values(by=criteria, ascending=False).iloc[0]
-            xPts_difference = best_replacement[criteria] - player[criteria]
+        for _, replacement in potential_replacements.iterrows():
+            xPts_difference = replacement[criteria] - player[criteria]
+            updated_squad = prev_squad.drop(player.name)
+            updated_squad = pd.concat([updated_squad, replacement.to_frame().T])
 
-            if xPts_difference > xPts_threshold:
-                transfers.append((player[name_column], best_replacement[name_column]))
-                prev_squad = prev_squad.drop(player.name)
-                prev_squad = pd.concat([prev_squad, best_replacement.to_frame().T])
+            # Ensure the updated squad remains within the original budget
+            if updated_squad[cost_column].sum() <= max_budget and xPts_difference > transfer_penalty:
+                prev_squad = updated_squad
                 total_transfers += 1
+                break  # Break out once a valid replacement is found
 
-    if total_transfers > free_transfers:
-        total_penalty = (total_transfers - free_transfers) * transfer_penalty
-    else:
-        total_penalty = 0
-
-    while prev_squad[cost_column].sum() > initial_cost:
-        lowest_xPts_player = prev_squad.sort_values(by=criteria).iloc[0]
-        prev_squad = prev_squad.drop(lowest_xPts_player.name)
-
-    print(f"Total transfers made: {total_transfers}, Transfer penalty: {total_penalty} points")
+    print(f"Total transfers made: {total_transfers}")
     return prev_squad
 
 def select_best_11(squad, criteria="xPts"):

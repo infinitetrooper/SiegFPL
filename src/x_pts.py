@@ -44,7 +44,7 @@ def calculate_expected_points(df=load_and_filter_data(), criteria="ict_index"):
             "correlation": model.score(X, y)
         }
 
-        print(f"Position: {position} | Criteria: {criteria} | Coefficient: {model.coef_[0]} | Intercept: {model.intercept_} | Points Trained: {y.size}")
+        # print(f"Position: {position} | Criteria: {criteria} | Coefficient: {model.coef_[0]} | Intercept: {model.intercept_} | Points Trained: {y.size}")
 
     return position_coefficients
 

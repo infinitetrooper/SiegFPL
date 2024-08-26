@@ -14,14 +14,17 @@ def main():
     # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
     predicted_points = best_11["xPts"].sum() + captain["xPts"]
 
-    # Display the squad
-    print("Squad of 15:")
+    # Calculate the total squad cost
+    total_squad_cost = squad['now_cost' if 'now_cost' in squad.columns else 'value'].sum()
+
+    # Display the squad size, details, and total cost
+    print(f"Squad of {len(squad)} players (Total Cost: {total_squad_cost}):")
     for _, player in squad.iterrows():
         print(
             f"{player['web_name' if 'web_name' in player else 'name']} - "
             f"Position: {player['position' if 'position' in player else 'element_type']} - "
             f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
-            f"xPts: {player['xPts']}"
+            f"Points: {player['total_points']}"
         )
 
     # Display the best starting 11
