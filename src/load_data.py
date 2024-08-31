@@ -101,18 +101,18 @@ def load_latest_data():
     else:
         raise FileNotFoundError(f"Data file not found: {file_path}")
 
-
 def load_team_data(gw=2, team_id=1365773):
     """
     Loads the saved FPL data from {project root}/fpl-data into a Pandas DataFrame using today's date.
     If the file does not exist, it fetches the data first and then loads it.
+    Merges additional player data from the latest available data.
 
     Args:
         team_id (int): The team ID.
         gw (int): The game week.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the FPL data.
+        pd.DataFrame: A DataFrame containing the FPL data, including the latest player information.
     """
     # Get today's date in the format YYYY-MM-DD
     current_date = datetime.now().strftime("%Y-%m-%d")
@@ -140,37 +140,67 @@ def load_team_data(gw=2, team_id=1365773):
 
     # Convert the JSON data to a Pandas DataFrame
     picks = data.get("picks", [])
+
     if not picks:
         raise ValueError(f"No picks data found in the loaded file for team {team_id} in GW {gw}.")
 
     df = pd.DataFrame(picks)
 
-    print(f"Data loaded from {file_path}")
+    # Load the latest data
+    latest_data = load_latest_data()
 
+    # Merge the latest data into the picks DataFrame
+    if latest_data is not None:
+        # Create a DataFrame from the latest_data
+        latest_df = pd.DataFrame(latest_data)
+
+        # Rename specific columns
+        latest_df.rename(columns={"id": "element", "web_name": "name"}, inplace=True)
+
+        # Map to convert element_type to position
+        position_map = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
+
+        # Merge with the picks DataFrame, prioritizing element_type from latest_df
+        df = pd.merge(df, latest_df, on="element", how="left", suffixes=('', '_drop'))
+
+        # Use the element_type from latest_df to set the position in the final df
+        df['position'] = df['element_type'].map(position_map)
+
+        # Drop any unnecessary columns from the original df that were replaced by latest_df
+        df = df.drop([col for col in df.columns if '_drop' in col], axis=1)
+
+    name_column = "web_name" if "web_name" in df.columns else "name"
     return df
 
 def create_current_team_df(picks_df, player_data):
     """
-    Creates the current team DataFrame by filtering the player data using the 'element' field from the picks DataFrame.
+    Merges additional columns from player_data into picks_df using the 'element' field without adding suffixes,
+    ensuring that overlapping columns retain values from picks_df.
 
     Args:
         picks_df (pd.DataFrame): A DataFrame representing the picks data.
         player_data (pd.DataFrame): The player data containing details for all available players.
 
     Returns:
-        pd.DataFrame: The filtered current team DataFrame.
+        pd.DataFrame: The updated picks_df with merged data from player_data, retaining picks_df values on overlap.
     """
     # Ensure picks_df is a DataFrame
     if not isinstance(picks_df, pd.DataFrame):
-        raise TypeError("Expected picks_data to be a DataFrame.")
+        raise TypeError("Expected picks_df to be a DataFrame.")
 
-    # Extract the elements from picks_df
-    elements = picks_df['element'].tolist()
+    # Perform the merge
+    updated_picks_df = pd.merge(picks_df, player_data, on="element", how="left", suffixes=('', '_y'))
 
-    # Filter the player_data based on these elements
-    current_team_df = player_data[player_data['element'].isin(elements)].copy()
+    # Iterate over the columns in picks_df
+    for col in picks_df.columns:
+        if col in updated_picks_df.columns:
+            # Overwrite the merged columns with picks_df values if there's an overlap
+            updated_picks_df[col] = updated_picks_df[f"{col}"]
 
-    return current_team_df
+    # Drop any extra columns created from the merge that have the "_y" suffix
+    updated_picks_df = updated_picks_df.drop([col for col in updated_picks_df.columns if col.endswith('_y')], axis=1)
+
+    return updated_picks_df
 
 if __name__ == "__main__":
     load_team_data()

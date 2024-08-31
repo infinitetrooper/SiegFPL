@@ -66,7 +66,7 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=load_latest_data()
     print(f"Number of eligible players: {len(eligible_df)}")
     return eligible_df
 
-def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, free_transfers=1, transfer_penalty=4):
+def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, free_transfers=1, transfer_threshold=4):
     """
     Picks the best squad if there is no previous squad. If a previous squad exists, it suggests transfers to improve the squad.
     Returns the full squad, best 11 players, and the captain.
@@ -84,7 +84,7 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
     else:
         # Use the handle_transfers function to update the squad
         current_team = create_current_team_df(picks_df=prev_squad, player_data=player_data)
-        squad = handle_transfers(player_data, current_team, free_transfers, transfer_penalty, criteria)
+        squad = handle_transfers(current_team, player_data, free_transfers, transfer_threshold, criteria)
 
     # Ensure squad is not None before proceeding
     if squad is None or squad.empty:
@@ -146,63 +146,112 @@ def select_new_squad(player_data, budget, cost_column, criteria):
 
     return squad if not squad.empty else None
 
-def handle_transfers(player_data, prev_squad, free_transfers, transfer_penalty, criteria="xPts"):
+def handle_transfers(current_team, eligible_players, free_transfers, transfer_threshold, criteria="xPts"):
     """
-    Suggests transfers to improve an existing team based on given criteria.
+    Handles transfers to improve the current team based on xPts criteria.
 
-    1. Performs free transfers within the same position and budget to improve xPts.
-    2. After free transfers, performs additional transfers within the same position and budget if xPts improvement justifies the transfer penalty.
-    3. Considers the overall squad cost during each transfer to ensure it stays within the budget.
+    1. For each position, find the lowest xPts player.
+    2. Search for a replacement within the budget that has higher xPts.
+    3. Sort these potential replacements by xPts difference.
+    4. Replace the player with the highest xPts difference.
+
+    Args:
+        current_team (pd.DataFrame): DataFrame containing the current team data.
+        eligible_players (pd.DataFrame): DataFrame containing eligible players for the gameweek.
+        free_transfers (int): Number of free transfers available.
+        transfer_threshold (int): The minimum xPts improvement required to justify a paid transfer.
+        criteria (str): The criteria to base the transfers on, typically "xPts".
+
+    Returns:
+        pd.DataFrame: Updated team after making transfers.
     """
-    cost_column = "now_cost" if "now_cost" in player_data.columns else "value"
-    name_column = "web_name" if "web_name" in player_data.columns else "name"
+    # Define cost and name columns for current_team
+    current_team_cost_column = "now_cost" if "now_cost" in current_team.columns else "value"
+    current_team_name_column = "web_name" if "web_name" in current_team.columns else "name"
 
-    player_data = player_data.sort_values(by=criteria, ascending=False)
-    total_transfers = 0
-    max_budget = max(1000, prev_squad[cost_column].sum())  # Set the maximum budget based on the current squad cost
+    # Define cost and name columns for eligible_players
+    eligible_players_cost_column = "now_cost" if "now_cost" in eligible_players.columns else "value"
+    eligible_players_name_column = "web_name" if "web_name" in eligible_players.columns else "name"
 
-    # First round: Make free transfers to improve the team
-    for _, player in prev_squad.iterrows():
-        potential_replacements = player_data[
-            (player_data['position'] == player['position']) &
-            (~player_data.index.isin(prev_squad.index)) &
-            (player_data[criteria] > player[criteria])
-        ]
+    # Ensure the 'position' column is correctly assigned using 'element_type'
+    if 'position' not in current_team.columns or current_team['position'].isna().any():
+        position_map = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
+        current_team['position'] = current_team['element_type'].map(position_map)
+
+    if 'position' not in eligible_players.columns or eligible_players['position'].isna().any():
+        position_map = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
+        eligible_players['position'] = eligible_players['element_type'].map(position_map)
+
+    # Treat NaN values in the criteria column as 0
+    current_team[criteria] = current_team[criteria].fillna(0)
+    eligible_players[criteria] = eligible_players[criteria].fillna(0)
+
+    print(f"Total squad cost before transfers: {current_team[current_team_cost_column].sum()}")
+    max_budget = max(current_team[current_team_cost_column].sum(), 1000)  # Maximum budget for the squad
+
+    # Store possible transfers (player_out, player_in, xPts_difference)
+    potential_transfers = []
+
+    print("\n--- Finding Potential Transfers ---")
+
+    # Step 1: For each position, find the lowest xPts player
+    for position in current_team['position'].unique():
+        position_players = current_team[current_team['position'] == position]
+        lowest_xPts_player = position_players.sort_values(by=criteria).iloc[0]
+
+        # Print element and position of the current player
+        print(f"Evaluating player {lowest_xPts_player['element']} in position {lowest_xPts_player['position']} with xPts: {lowest_xPts_player[criteria]}")
+
+        # Step 2: Find eligible replacements within budget for this player
+        potential_replacements = eligible_players[
+            (eligible_players['position'] == position) &
+            (eligible_players[criteria] > lowest_xPts_player[criteria])  # Remove players with lower xPts
+            ].sort_values(by=criteria, ascending=False)  # Sort replacements by xPts
 
         for _, replacement in potential_replacements.iterrows():
-            updated_squad = prev_squad.drop(player.name)
-            updated_squad = pd.concat([updated_squad, replacement.to_frame().T])
+            # Check if replacement is within budget
+            updated_squad_cost = max_budget - lowest_xPts_player[current_team_cost_column] + replacement[eligible_players_cost_column]
+            if updated_squad_cost <= max_budget:
+                xPts_difference = replacement[criteria] - lowest_xPts_player[criteria]
+                potential_transfers.append((lowest_xPts_player, replacement, xPts_difference))
+                print(
+                    f"Found replacement: {replacement[eligible_players_name_column]} with xPts: {replacement[criteria]} (xPts Difference: {xPts_difference})")
+                break  # Stop after finding the first valid replacement within budget
 
-            # Ensure the updated squad remains within the original budget
-            if updated_squad[cost_column].sum() <= max_budget:
-                prev_squad = updated_squad
-                total_transfers += 1
-                break  # Break out once a valid replacement is found
+    # Step 3: Sort the potential replacements by xPts difference in descending order
+    potential_transfers.sort(key=lambda x: x[2], reverse=True)
 
-        if total_transfers >= free_transfers:
-            break  # Stop once free transfers are exhausted
+    # Step 4: Perform free transfers first
+    transfers_made = 0
+    print("\n--- Performing Free Transfers ---")
+    for transfer in potential_transfers[:free_transfers]:
+        player_out, player_in, _ = transfer
+        print(f"Transferring Out: {player_out[current_team_name_column]} ({player_out[criteria]} xPts)")
+        print(f"Transferring In: {player_in[eligible_players_name_column]} ({player_in[criteria]} xPts)")
 
-    # Second round: Make additional transfers if the improvement justifies the transfer penalty
-    for _, player in prev_squad.iterrows():
-        potential_replacements = player_data[
-            (player_data['position'] == player['position']) &
-            (~player_data.index.isin(prev_squad.index)) &
-            (player_data[criteria] > player[criteria])
-        ]
+        current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
+        current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
+        transfers_made += 1
 
-        for _, replacement in potential_replacements.iterrows():
-            xPts_difference = replacement[criteria] - player[criteria]
-            updated_squad = prev_squad.drop(player.name)
-            updated_squad = pd.concat([updated_squad, replacement.to_frame().T])
+    # Step 5: Perform additional transfers if xPts improvement is greater than the transfer threshold
+    print("\n--- Performing Paid Transfers ---")
+    for transfer in potential_transfers[free_transfers:]:
+        player_out, player_in, xPts_difference = transfer
+        if xPts_difference > transfer_threshold:
+            print(f"Transferring Out: {player_out[current_team_name_column]} ({player_out[criteria]} xPts)")
+            print(f"Transferring In: {player_in[eligible_players_name_column]} ({player_in[criteria]} xPts)")
+            current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
+            current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
+            transfers_made += 1
 
-            # Ensure the updated squad remains within the original budget
-            if updated_squad[cost_column].sum() <= max_budget and xPts_difference > transfer_penalty:
-                prev_squad = updated_squad
-                total_transfers += 1
-                break  # Break out once a valid replacement is found
+    print(f"\nTotal transfers made: {transfers_made}")
+    print(f"Total squad cost after transfers: {current_team[current_team_cost_column].sum()}")
 
-    print(f"Total transfers made: {total_transfers}")
-    return prev_squad
+    # Ensure squad still has 15 players
+    if len(current_team) != 15:
+        raise ValueError("Squad size must be 15 players after transfers.")
+
+    return current_team
 
 def select_best_11(squad, criteria="xPts"):
     """
@@ -225,7 +274,11 @@ def select_best_11(squad, criteria="xPts"):
             break
         # Add the player only if it's not a goalkeeper (GK) or if we already have 1 GK in best 11
         if player['position'] != 'GK':
-            best_11 = pd.concat([best_11, player.to_frame().T])
+            # Before concatenating, drop any columns that are all NaN from the player DataFrame
+            player_df = player.to_frame().T.dropna(axis=1, how='all')
+
+            # Then, concatenate the player DataFrame with best_11
+            best_11 = pd.concat([best_11, player_df])
             remaining_spots -= 1
 
     return best_11

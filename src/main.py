@@ -9,7 +9,7 @@ def main():
     current_team = load_team_data(gw=gw-1)
 
     # Build the squad
-    squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team)
+    squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=2, transfer_threshold=3)
 
     # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
     predicted_points = best_11["xPts"].sum() + captain["xPts"]
