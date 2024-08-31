@@ -51,8 +51,21 @@ def simulate_season_2023_24():
 
         # Display the squad size, details, and total cost
         print(f"Squad of {len(squad)} players (Total Cost: {total_squad_cost}):")
-        print(
-            f"Current team : {[f'{p['name']} ({p['element']}, {p['position']}' for _, p in current_team.iterrows()]}")
+        # Iterate through each player in the current team and fetch their points for the current game week
+        player_details = []
+        for _, player in current_team.iterrows():
+            # Fetch the total points for the player for the current game week
+            gw_points = season_data[
+                (season_data['GW'] == gw) & (season_data['element'] == player['element'])
+                ]['total_points'].values
+
+            # Handle cases where no points are found for the player (e.g., if the player didn't play)
+            gw_points = gw_points[0] if len(gw_points) > 0 else 0
+
+            player_details.append(f"{player['name']} ({player['element']}, {player['position']}, {gw_points} points)")
+
+        # Print the current team with total points for the game week
+        print(f"Current team : {player_details}")
 
         # Clear data frames after each loop to manage memory
         del eligible_players, squad, best_11, captain

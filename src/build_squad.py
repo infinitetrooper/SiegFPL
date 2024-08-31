@@ -196,29 +196,39 @@ def handle_transfers(current_team, eligible_players, free_transfers, transfer_th
 
     print("\n--- Finding Potential Transfers ---")
 
-    # Step 1: For each position, find the lowest xPts player
-    for position in current_team['position'].unique():
-        position_players = current_team[current_team['position'] == position]
-        lowest_xPts_player = position_players.sort_values(by=criteria).iloc[0]
+    # Initialize a set to keep track of used replacements
+    used_replacements = set()
 
+    # Sort the current team by the criteria (e.g., xPts) in ascending order
+    current_team_sorted = current_team.sort_values(by=criteria, ascending=True)
+
+    # Iterate over each player in the sorted current team
+    for _, lowest_xPts_player in current_team_sorted.iterrows():
         # Print element and position of the current player
-        print(f"Evaluating player {lowest_xPts_player['element']} in position {lowest_xPts_player['position']} with xPts: {lowest_xPts_player[criteria]}")
+        print(
+            f"Evaluating player {lowest_xPts_player['element']} in position {lowest_xPts_player['position']} with xPts: {lowest_xPts_player[criteria]}")
 
-        # Step 2: Find eligible replacements within budget for this player
+        # Find eligible replacements within budget for this player
         potential_replacements = eligible_players[
-            (eligible_players['position'] == position) &
+            (eligible_players['position'] == lowest_xPts_player['position']) &
             (eligible_players[criteria] > lowest_xPts_player[criteria]) &  # Remove players with lower xPts
-            (~eligible_players['element'].isin(current_team['element']))  # Exclude players already in the current squad
+            (~eligible_players['element'].isin(
+                current_team['element'])) &  # Exclude players already in the current squad
+            (~eligible_players['element'].isin(used_replacements))  # Exclude already used replacements
             ].sort_values(by=criteria, ascending=False)  # Sort replacements by xPts
 
         for _, replacement in potential_replacements.iterrows():
             # Check if replacement is within budget
-            updated_squad_cost = max_budget - lowest_xPts_player[current_team_cost_column] + replacement[eligible_players_cost_column]
+            updated_squad_cost = max_budget - lowest_xPts_player[current_team_cost_column] + replacement[
+                eligible_players_cost_column]
             if updated_squad_cost <= max_budget:
                 xPts_difference = replacement[criteria] - lowest_xPts_player[criteria]
                 potential_transfers.append((lowest_xPts_player, replacement, xPts_difference))
                 print(
                     f"Found replacement: {replacement[eligible_players_name_column]} with xPts: {replacement[criteria]} (xPts Difference: {xPts_difference})")
+
+                # Add the replacement player to the set of used replacements
+                used_replacements.add(replacement['element'])
                 break  # Stop after finding the first valid replacement within budget
 
     # Step 3: Sort the potential replacements by xPts difference in descending order
