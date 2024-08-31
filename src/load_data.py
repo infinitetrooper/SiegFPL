@@ -188,6 +188,10 @@ def create_current_team_df(picks_df, player_data):
     if not isinstance(picks_df, pd.DataFrame):
         raise TypeError("Expected picks_df to be a DataFrame.")
 
+    # Ensure there are no duplicate entries based on the 'element' column in both DataFrames
+    picks_df = picks_df.drop_duplicates(subset=['element'])
+    player_data = player_data.drop_duplicates(subset=['element'])
+
     # Perform the merge
     updated_picks_df = pd.merge(picks_df, player_data, on="element", how="left", suffixes=('', '_y'))
 

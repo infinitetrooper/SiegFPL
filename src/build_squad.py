@@ -1,4 +1,6 @@
 import pandas as pd
+pd.set_option('future.no_silent_downcasting', True)
+
 from x_pts import calculate_expected_points, predict_future_xPts
 from load_data import load_latest_data, create_current_team_df
 
@@ -183,8 +185,8 @@ def handle_transfers(current_team, eligible_players, free_transfers, transfer_th
         eligible_players['position'] = eligible_players['element_type'].map(position_map)
 
     # Treat NaN values in the criteria column as 0
-    current_team[criteria] = current_team[criteria].fillna(0)
-    eligible_players[criteria] = eligible_players[criteria].fillna(0)
+    current_team[criteria] = current_team[criteria].fillna(0).infer_objects(copy=False)
+    eligible_players[criteria] = eligible_players[criteria].fillna(0).infer_objects(copy=False)
 
     print(f"Total squad cost before transfers: {current_team[current_team_cost_column].sum()}")
     max_budget = max(current_team[current_team_cost_column].sum(), 1000)  # Maximum budget for the squad
@@ -205,7 +207,8 @@ def handle_transfers(current_team, eligible_players, free_transfers, transfer_th
         # Step 2: Find eligible replacements within budget for this player
         potential_replacements = eligible_players[
             (eligible_players['position'] == position) &
-            (eligible_players[criteria] > lowest_xPts_player[criteria])  # Remove players with lower xPts
+            (eligible_players[criteria] > lowest_xPts_player[criteria]) &  # Remove players with lower xPts
+            (~eligible_players['element'].isin(current_team['element']))  # Exclude players already in the current squad
             ].sort_values(by=criteria, ascending=False)  # Sort replacements by xPts
 
         for _, replacement in potential_replacements.iterrows():

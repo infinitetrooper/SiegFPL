@@ -4,7 +4,6 @@ from src.load_data import load_and_filter_data, load_team_data
 from src.build_squad import pick_best_squad, handle_transfers, select_best_11, get_eligible_players_for_gw
 import gc
 
-
 def simulate_season_2023_24():
     # Load the initial data for the season
     season_data = load_and_filter_data(year="2023-24")
@@ -28,8 +27,18 @@ def simulate_season_2023_24():
             # Build the squad for the week using previous data and transfers
             squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team)
 
-        # Calculate the actual points for the best 11 players in this gameweek, with captain points doubled
-        gw_actual_points = best_11["total_points"].sum() + captain["total_points"]
+        # Calculate the actual points for the best 11 players in this gameweek
+        gw_actual_points = 0
+        for _, player in best_11.iterrows():
+            player_points = season_data[(season_data['GW'] == gw) & (season_data['element'] == player['element'])]['total_points']
+            player_points = player_points.values[0] if not player_points.empty else 0
+            gw_actual_points += player_points
+
+        # Double the captain's points
+        captain_points = season_data[(season_data['GW'] == gw) & (season_data['element'] == captain['element'])]['total_points']
+        captain_points = captain_points.values[0] if not captain_points.empty else 0
+        gw_actual_points += captain_points  # Add the captain's points again for doubling
+
         season_points += gw_actual_points
 
         print(f"Points for GW{gw}: {gw_actual_points}")
@@ -42,13 +51,8 @@ def simulate_season_2023_24():
 
         # Display the squad size, details, and total cost
         print(f"Squad of {len(squad)} players (Total Cost: {total_squad_cost}):")
-        for _, player in squad.iterrows():
-            print(
-                f"{player['web_name' if 'web_name' in player else 'name']} - "
-                f"Position: {player['position' if 'position' in player else 'element_type']} - "
-                f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
-                f"Points: {player['total_points']}"
-            )
+        print(
+            f"Current team : {[f'{p['name']} ({p['element']}, {p['position']}' for _, p in current_team.iterrows()]}")
 
         # Clear data frames after each loop to manage memory
         del eligible_players, squad, best_11, captain
@@ -58,7 +62,6 @@ def simulate_season_2023_24():
     print(f"\nTotal points for the 2023-24 season: {season_points}")
 
     return season_points
-
 
 if __name__ == "__main__":
     # Run the simulation
