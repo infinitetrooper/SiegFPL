@@ -5,7 +5,7 @@ from x_pts import calculate_expected_points, predict_future_xPts
 from load_data import load_latest_data, create_current_team_df
 
 
-def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=load_latest_data()):
+def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     """
     Returns a DataFrame of eligible players for a given game week, with additional calculations like average 3-week ICT index and expected points (xPts).
     """
@@ -42,6 +42,7 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=load_latest_data()
     eligible_df = eligible_df[eligible_df["avg_3w_ict"] > 0].copy()
 
     if latest_data is not None:
+        print("Using latest data in getting eligible players.")
         # Convert latest_data into a DataFrame with relevant columns
         latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(
             columns={"id": "element"}

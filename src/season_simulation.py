@@ -22,7 +22,7 @@ def simulate_season_2023_24():
                                                       criteria=criteria)
         else:
             # Get eligible players for the gameweek and the current team
-            eligible_players = get_eligible_players_for_gw(gw=gw, merged_gw_df=season_data, latest_data=None)
+            eligible_players = get_eligible_players_for_gw(gw=gw, merged_gw_df=season_data)
 
             # Build the squad for the week using previous data and transfers
             squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team)

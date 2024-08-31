@@ -1,15 +1,17 @@
 from build_squad import pick_best_squad, get_eligible_players_for_gw
 from load_data import load_and_filter_data, load_team_data
+from src.load_data import load_latest_data
+
 
 def main():
     # Fetch FPL data
     gw = get_game_week()
     fpl_data = load_and_filter_data(year="2024-25", min_minutes=0, min_gw=0)
-    eligible_players = get_eligible_players_for_gw(gw, fpl_data)
+    eligible_players = get_eligible_players_for_gw(gw=gw, merged_gw_df=fpl_data, latest_data=load_latest_data())
     current_team = load_team_data(gw=gw-1)
 
     # Build the squad
-    squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=2, transfer_threshold=3)
+    squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=2, transfer_threshold=2)
 
     # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
     predicted_points = best_11["xPts"].sum() + captain["xPts"]

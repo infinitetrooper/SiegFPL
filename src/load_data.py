@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 from get_data import clone_fpl_repo, fetch_team_gw_data
 
-
 def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     """
     Loads the CSV file, filters out players who played fewer than the specified minutes in the specified number of game weeks,
@@ -41,7 +40,6 @@ def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     # Filter and return the DataFrame with only eligible players
     return df[df["element"].isin(eligible_players)]
 
-
 def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
     """
     Loads the CSV file containing data from multiple seasons, filters out players who played fewer than the specified minutes
@@ -76,7 +74,6 @@ def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
 
     # Filter and return the DataFrame with only eligible players
     return df[df["element"].isin(eligible_players)]
-
 
 def load_latest_data():
     """
