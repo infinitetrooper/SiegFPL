@@ -7,6 +7,17 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     """
     Returns a DataFrame of eligible players for a given game week, with additional calculations like average 3-week ICT index and expected points (xPts).
     """
+    # Ensure required columns are present and appropriately mapped
+    required_columns = {'element_type', 'position', 'element', 'xPts'}
+    if not required_columns.issubset(merged_gw_df.columns):
+        if "element_type" not in merged_gw_df.columns and "position" in merged_gw_df.columns:
+            position_map = {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}
+            merged_gw_df["element_type"] = merged_gw_df["position"].map({v: k for k, v in position_map.items()})
+
+        if "position" not in merged_gw_df.columns and "element_type" in merged_gw_df.columns:
+            position_map = {"GK": 1, "DEF": 2, "MID": 3, "FWD": 4}
+            merged_gw_df["position"] = merged_gw_df['element_type'].map(position_map)
+
     if gw < 2:
         raise ValueError("Game week must be at least 2 or higher to calculate averages.")
 
@@ -146,41 +157,42 @@ def select_new_squad(player_data, budget, cost_column, criteria):
 
     return squad if not squad.empty else None
 
-def handle_transfers(current_team, eligible_players, free_transfers, transfer_threshold, criteria="xPts"):
+
+def handle_transfers(current_team: pd.DataFrame, eligible_players: pd.DataFrame, free_transfers: int,
+                     transfer_threshold: int, criteria: str = "xPts") -> pd.DataFrame:
     """
     Handles transfers to improve the current team based on xPts criteria.
-
     1. For each position, find the lowest xPts player.
     2. Search for a replacement within the budget that has higher xPts.
     3. Sort these potential replacements by xPts difference.
     4. Replace the player with the highest xPts difference.
-
     Args:
         current_team (pd.DataFrame): DataFrame containing the current team data.
         eligible_players (pd.DataFrame): DataFrame containing eligible players for the gameweek.
         free_transfers (int): Number of free transfers available.
         transfer_threshold (int): The minimum xPts improvement required to justify a paid transfer.
         criteria (str): The criteria to base the transfers on, typically "xPts".
-
     Returns:
         pd.DataFrame: Updated team after making transfers.
     """
+    # Validate input DataFrames
+    required_columns = {'position', criteria, 'element', 'element_type'}
+    assert required_columns.issubset(
+        current_team.columns), f"current_team is missing required columns: {required_columns - set(current_team.columns)}"
+    assert required_columns.issubset(
+        eligible_players.columns), f"eligible_players is missing required columns: {required_columns - set(eligible_players.columns)}"
+
     # Define cost and name columns for current_team
     current_team_cost_column = "now_cost" if "now_cost" in current_team.columns else "value"
     current_team_name_column = "web_name" if "web_name" in current_team.columns else "name"
-
     # Define cost and name columns for eligible_players
     eligible_players_cost_column = "now_cost" if "now_cost" in eligible_players.columns else "value"
     eligible_players_name_column = "web_name" if "web_name" in eligible_players.columns else "name"
 
     # Ensure the 'position' column is correctly assigned using 'element_type'
-    if 'position' not in current_team.columns or current_team['position'].isna().any():
-        position_map = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
-        current_team['position'] = current_team['element_type'].map(position_map)
-
-    if 'position' not in eligible_players.columns or eligible_players['position'].isna().any():
-        position_map = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
-        eligible_players['position'] = eligible_players['element_type'].map(position_map)
+    position_map = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
+    current_team['position'] = current_team.get('position', current_team['element_type'].map(position_map))
+    eligible_players['position'] = eligible_players.get('position', eligible_players['element_type'].map(position_map))
 
     # Treat NaN values in the criteria column as 0
     current_team[criteria] = current_team[criteria].fillna(0).infer_objects(copy=False)
@@ -191,7 +203,6 @@ def handle_transfers(current_team, eligible_players, free_transfers, transfer_th
 
     # Store possible transfers (player_out, player_in, xPts_difference)
     potential_transfers = []
-
     print("\n--- Finding Potential Transfers ---")
 
     # Initialize a set to keep track of used replacements
@@ -200,65 +211,41 @@ def handle_transfers(current_team, eligible_players, free_transfers, transfer_th
     # Sort the current team by the criteria (e.g., xPts) in ascending order
     current_team_sorted = current_team.sort_values(by=criteria, ascending=True)
 
-    # Initialize a list to store all potential transfers
-    potential_transfers = []
-
     # Iterate over each player in the sorted current team
     for _, player in current_team_sorted.iterrows():
         filtered_replacements = eligible_players[
             (eligible_players['position'] == player['position']) &  # Same position
-            (eligible_players[criteria] > player[criteria]) &  # Higher xPts
-        (~eligible_players['element'].isin([player['element']]))  # Exclude the player itself
-        ].sort_values(by=criteria, ascending=False)
+            (eligible_players[criteria] > player[criteria])  # Higher xPts
+            & (~eligible_players['element'].isin([player['element']]))  # Exclude the player itself
+            ].sort_values(by=criteria, ascending=False)
+
         # Iterate over each eligible player to find potential replacements
         for _, replacement in filtered_replacements.iterrows():
-            print(f"Replacement for {player[current_team_name_column]} with xPts: {player[criteria]} and cost {player[current_team_cost_column]} - "
-                  f"{replacement[eligible_players_name_column]} with xPts: {replacement[criteria]} and cost {replacement[eligible_players_cost_column]} "
-                  f"and total cost {current_team[current_team_cost_column].sum() - player[current_team_cost_column] + replacement[
-                    eligible_players_cost_column]}")
-            # Check if the replacement is in the same position and has higher xPts, is not already in the squad, and hasn't been used as a replacement yet
-            if (replacement['position'] == player['position'] and
-                    replacement[criteria] > player[criteria] and
-                    replacement['element'] not in current_team['element'].values and
-                    replacement['element'] not in used_replacements):
+            updated_squad_cost = current_team[current_team_cost_column].sum() - player[current_team_cost_column] + \
+                                 replacement[eligible_players_cost_column]
+            if (replacement['element'] not in used_replacements and updated_squad_cost <= max_budget):
+                xPts_difference = replacement[criteria] - player[criteria]
+                potential_transfers.append((player, replacement, xPts_difference))
+                used_replacements.add(replacement['element'])
+                break
 
-                # Check if the replacement is within budget
-                updated_squad_cost = current_team[current_team_cost_column].sum() - player[current_team_cost_column] + replacement[
-                    eligible_players_cost_column]
-                print(
-                    f"Updated Squad Cost with replacement {replacement[eligible_players_name_column]}: {updated_squad_cost}")
-                if updated_squad_cost <= max_budget:
-                    xPts_difference = replacement[criteria] - player[criteria]
-                    potential_transfers.append((player, replacement, xPts_difference))
-                    print(
-                        f"Found replacement: {replacement[eligible_players_name_column]} with xPts: {replacement[criteria]} (xPts Difference: {xPts_difference})")
-
-                    # Add the replacement player to the set of used replacements
-                    used_replacements.add(replacement['element'])
-                    break
-
-    # Step 3: Sort the potential replacements by xPts difference in descending order
+    # Sort the potential replacements by xPts difference in descending order
     potential_transfers.sort(key=lambda x: x[2], reverse=True)
 
-    # Step 4: Perform free transfers first
+    # Perform free transfers first
     transfers_made = 0
     print("\n--- Performing Free Transfers ---")
     for transfer in potential_transfers[:free_transfers]:
         player_out, player_in, _ = transfer
-        print(f"Transferring Out: {player_out[current_team_name_column]} with cost {player_out[current_team_cost_column]} ({player_out[criteria]} xPts)")
-        print(f"Transferring In: {player_in[eligible_players_name_column]} with cost {player_in[eligible_players_cost_column]} ({player_in[criteria]} xPts)")
-
         current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
         current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
         transfers_made += 1
 
-    # Step 5: Perform additional transfers if xPts improvement is greater than the transfer threshold
+    # Perform additional transfers if xPts improvement is greater than the transfer threshold
     print("\n--- Performing Paid Transfers ---")
     for transfer in potential_transfers[free_transfers:]:
         player_out, player_in, xPts_difference = transfer
         if xPts_difference > transfer_threshold:
-            print(f"Transferring Out: {player_out[current_team_name_column]} ({player_out[criteria]} xPts)")
-            print(f"Transferring In: {player_in[eligible_players_name_column]} ({player_in[criteria]} xPts)")
             current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
             current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
             transfers_made += 1
