@@ -68,8 +68,8 @@ def simulate_season_2023_24():
         print(f"Current team : {player_details}")
 
         # Clear data frames after each loop to manage memory
-        del eligible_players, squad, best_11, captain
-        gc.collect()
+        # del eligible_players, squad, best_11, captain
+        # gc.collect()
 
     # Print the total points accumulated for the season
     print(f"\nTotal points for the 2023-24 season: {season_points}")

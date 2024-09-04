@@ -98,7 +98,7 @@ def load_latest_data():
     else:
         raise FileNotFoundError(f"Data file not found: {file_path}")
 
-def load_team_data(gw=2, team_id=1365773):
+def load_team_data(gw, team_id=1365773):
     """
     Loads the saved FPL data from {project root}/fpl-data into a Pandas DataFrame using today's date.
     If the file does not exist, it fetches the data first and then loads it.
@@ -204,4 +204,4 @@ def create_current_team_df(picks_df, player_data):
     return updated_picks_df
 
 if __name__ == "__main__":
-    load_team_data()
+    load_team_data(gw=3)

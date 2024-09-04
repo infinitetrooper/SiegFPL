@@ -35,7 +35,6 @@ def clone_fpl_repo():
 
     return clone_directory
 
-
 def fetch_api_data():
     url = "https://fantasy.premierleague.com/api/bootstrap-static/"
     response = requests.get(url)

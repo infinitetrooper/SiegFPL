@@ -1,9 +1,7 @@
 import pandas as pd
 pd.set_option('future.no_silent_downcasting', True)
-
 from x_pts import calculate_expected_points, predict_future_xPts
 from load_data import load_latest_data, create_current_team_df
-
 
 def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     """
@@ -16,20 +14,20 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     prev_gw_df = merged_gw_df[merged_gw_df["GW"] < gw].copy()  # Explicit copy to avoid chained assignment issues
     window_size = 3 if gw >= 4 else gw - 1
 
-    # Step 1: Filter the current game week data
+    # Step 2: Filter the current game week data
     current_gw_df = merged_gw_df[merged_gw_df["GW"] == gw - 1].copy()
 
-    # Step 2: Calculate the avg_3w_ict
+    # Step 3: Calculate the avg_3w_ict
     prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(
         window=window_size, min_periods=1
     ).mean().reset_index(level=0, drop=True)
 
-    # Step 3: Filter prev_gw_df to only include rows where both element and GW are in current_gw_df
+    # Step 4: Filter prev_gw_df to only include rows where both element and GW are in current_gw_df
     filtered_prev_gw_df = prev_gw_df[
         prev_gw_df.set_index(["element", "GW"]).index.isin(current_gw_df.set_index(["element", "GW"]).index)
     ].copy()
 
-    # Step 4: Merge the avg_3w_ict back into the current game week data
+    # Step 5: Merge the avg_3w_ict back into the current game week data
     current_gw_df = pd.merge(
         current_gw_df,
         filtered_prev_gw_df[["element", "avg_3w_ict"]],
@@ -37,7 +35,7 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
         how="left"
     )
 
-    # Step 5: Filter out rows where avg_3w_ict is NaN or <= 0
+    # Step 6: Filter out rows where avg_3w_ict is NaN or <= 0
     eligible_df = current_gw_df.dropna(subset=["avg_3w_ict"])
     eligible_df = eligible_df[eligible_df["avg_3w_ict"] > 0].copy()
 
@@ -60,13 +58,12 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
         # Drop the "now_cost" column as it's no longer needed
         eligible_df.drop(columns=["now_cost"], inplace=True)
 
-    # Step 3: Add xPts for these players
+    # Step 7: Add xPts for these players
     position_coefficients = calculate_expected_points()
     eligible_df["xPts"] = eligible_df.apply(
         lambda row: round(predict_future_xPts(row["avg_3w_ict"], row["position"], position_coefficients), 2), axis=1
     )
 
-    print(f"Number of eligible players: {len(eligible_df)}")
     return eligible_df
 
 def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, free_transfers=1, transfer_threshold=4):
@@ -203,34 +200,42 @@ def handle_transfers(current_team, eligible_players, free_transfers, transfer_th
     # Sort the current team by the criteria (e.g., xPts) in ascending order
     current_team_sorted = current_team.sort_values(by=criteria, ascending=True)
 
+    # Initialize a list to store all potential transfers
+    potential_transfers = []
+
     # Iterate over each player in the sorted current team
-    for _, lowest_xPts_player in current_team_sorted.iterrows():
-        # Print element and position of the current player
-        print(
-            f"Evaluating player {lowest_xPts_player['element']} in position {lowest_xPts_player['position']} with xPts: {lowest_xPts_player[criteria]}")
+    for _, player in current_team_sorted.iterrows():
+        filtered_replacements = eligible_players[
+            (eligible_players['position'] == player['position']) &  # Same position
+            (eligible_players[criteria] > player[criteria]) &  # Higher xPts
+        (~eligible_players['element'].isin([player['element']]))  # Exclude the player itself
+        ].sort_values(by=criteria, ascending=False)
+        # Iterate over each eligible player to find potential replacements
+        for _, replacement in filtered_replacements.iterrows():
+            print(f"Replacement for {player[current_team_name_column]} with xPts: {player[criteria]} and cost {player[current_team_cost_column]} - "
+                  f"{replacement[eligible_players_name_column]} with xPts: {replacement[criteria]} and cost {replacement[eligible_players_cost_column]} "
+                  f"and total cost {current_team[current_team_cost_column].sum() - player[current_team_cost_column] + replacement[
+                    eligible_players_cost_column]}")
+            # Check if the replacement is in the same position and has higher xPts, is not already in the squad, and hasn't been used as a replacement yet
+            if (replacement['position'] == player['position'] and
+                    replacement[criteria] > player[criteria] and
+                    replacement['element'] not in current_team['element'].values and
+                    replacement['element'] not in used_replacements):
 
-        # Find eligible replacements within budget for this player
-        potential_replacements = eligible_players[
-            (eligible_players['position'] == lowest_xPts_player['position']) &
-            (eligible_players[criteria] > lowest_xPts_player[criteria]) &  # Remove players with lower xPts
-            (~eligible_players['element'].isin(
-                current_team['element'])) &  # Exclude players already in the current squad
-            (~eligible_players['element'].isin(used_replacements))  # Exclude already used replacements
-            ].sort_values(by=criteria, ascending=False)  # Sort replacements by xPts
-
-        for _, replacement in potential_replacements.iterrows():
-            # Check if replacement is within budget
-            updated_squad_cost = max_budget - lowest_xPts_player[current_team_cost_column] + replacement[
-                eligible_players_cost_column]
-            if updated_squad_cost <= max_budget:
-                xPts_difference = replacement[criteria] - lowest_xPts_player[criteria]
-                potential_transfers.append((lowest_xPts_player, replacement, xPts_difference))
+                # Check if the replacement is within budget
+                updated_squad_cost = current_team[current_team_cost_column].sum() - player[current_team_cost_column] + replacement[
+                    eligible_players_cost_column]
                 print(
-                    f"Found replacement: {replacement[eligible_players_name_column]} with xPts: {replacement[criteria]} (xPts Difference: {xPts_difference})")
+                    f"Updated Squad Cost with replacement {replacement[eligible_players_name_column]}: {updated_squad_cost}")
+                if updated_squad_cost <= max_budget:
+                    xPts_difference = replacement[criteria] - player[criteria]
+                    potential_transfers.append((player, replacement, xPts_difference))
+                    print(
+                        f"Found replacement: {replacement[eligible_players_name_column]} with xPts: {replacement[criteria]} (xPts Difference: {xPts_difference})")
 
-                # Add the replacement player to the set of used replacements
-                used_replacements.add(replacement['element'])
-                break  # Stop after finding the first valid replacement within budget
+                    # Add the replacement player to the set of used replacements
+                    used_replacements.add(replacement['element'])
+                    break
 
     # Step 3: Sort the potential replacements by xPts difference in descending order
     potential_transfers.sort(key=lambda x: x[2], reverse=True)
@@ -240,8 +245,8 @@ def handle_transfers(current_team, eligible_players, free_transfers, transfer_th
     print("\n--- Performing Free Transfers ---")
     for transfer in potential_transfers[:free_transfers]:
         player_out, player_in, _ = transfer
-        print(f"Transferring Out: {player_out[current_team_name_column]} ({player_out[criteria]} xPts)")
-        print(f"Transferring In: {player_in[eligible_players_name_column]} ({player_in[criteria]} xPts)")
+        print(f"Transferring Out: {player_out[current_team_name_column]} with cost {player_out[current_team_cost_column]} ({player_out[criteria]} xPts)")
+        print(f"Transferring In: {player_in[eligible_players_name_column]} with cost {player_in[eligible_players_cost_column]} ({player_in[criteria]} xPts)")
 
         current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
         current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
