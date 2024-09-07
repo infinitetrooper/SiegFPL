@@ -1,5 +1,5 @@
 from load_data import load_and_filter_data, load_and_filter_all_seasons_data
-from src.x_pts import calculate_expected_points
+from x_pts import calculate_expected_points
 
 
 def find_top_coefficients_by_position(min_gw=10, min_minutes=60):

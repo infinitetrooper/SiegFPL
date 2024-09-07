@@ -4,6 +4,8 @@ import shutil
 import requests
 from git import Repo
 from datetime import datetime
+import time
+
 
 def clone_fpl_repo():
     # Define the repository URL
@@ -96,9 +98,12 @@ def fetch_team_gw_data(gw, team_id=1365773):
         with open(file_path, "w") as json_file:
             json.dump(data, json_file, indent=4)
 
+        # Wait for a short duration to ensure the file is fully written
+        time.sleep(0.5)  # Adjust the delay as needed
+
         print(f"Data for team {team_id} in GW {gw} successfully saved to {file_path}")
     else:
         print(f"Failed to fetch data. Status code: {response.status_code}")
-
+        
 if __name__ == "__main__":
-    fetch_team_gw_data(gw=2)
+    fetch_team_gw_data(gw=3)

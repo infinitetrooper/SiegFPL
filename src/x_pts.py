@@ -1,7 +1,7 @@
 from statistics import correlation
 
 from sklearn.linear_model import LinearRegression
-from src.load_data import load_and_filter_data, load_and_filter_all_seasons_data
+from load_data import load_and_filter_data, load_and_filter_all_seasons_data
 import pandas as pd
 
 def calculate_expected_points(df=load_and_filter_data(), criteria="ict_index"):

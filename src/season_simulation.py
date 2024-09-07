@@ -1,7 +1,7 @@
 import pandas as pd
-from src.x_pts import calculate_expected_points, predict_future_xPts
-from src.load_data import load_and_filter_data, load_team_data
-from src.build_squad import pick_best_squad, handle_transfers, select_best_11, get_eligible_players_for_gw
+from x_pts import calculate_expected_points, predict_future_xPts
+from load_data import load_and_filter_data, load_team_data
+from build_squad import pick_best_squad, handle_transfers, select_best_11, get_eligible_players_for_gw
 import gc
 
 def simulate_season_2023_24():

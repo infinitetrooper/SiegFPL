@@ -1,6 +1,6 @@
 from build_squad import pick_best_squad, get_eligible_players_for_gw
 from load_data import load_and_filter_data, load_team_data
-from src.load_data import load_latest_data
+from load_data import load_latest_data
 
 
 def main():
@@ -13,8 +13,7 @@ def main():
         current_team = load_team_data(gw=gw - 1)
 
         # Build the squad
-        squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team,
-                                                  free_transfers=2, transfer_threshold=2)
+        squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=2, transfer_threshold=2)
 
         # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
         predicted_points = best_11["xPts"].sum() + captain["xPts"]
