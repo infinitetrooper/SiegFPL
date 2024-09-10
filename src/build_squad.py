@@ -66,8 +66,6 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
         # Assign the "value" column as "now_cost"
         eligible_df["value"] = eligible_df["now_cost"]
 
-        # Drop the "now_cost" column as it's no longer needed
-        eligible_df.drop(columns=["now_cost"], inplace=True)
 
     # Step 7: Add xPts for these players
     position_coefficients = calculate_expected_points()
@@ -203,7 +201,6 @@ def handle_transfers(current_team: pd.DataFrame, eligible_players: pd.DataFrame,
 
     # Store possible transfers (player_out, player_in, xPts_difference)
     potential_transfers = []
-    print("\n--- Finding Potential Transfers ---")
 
     # Initialize a set to keep track of used replacements
     used_replacements = set()
@@ -217,8 +214,10 @@ def handle_transfers(current_team: pd.DataFrame, eligible_players: pd.DataFrame,
             (eligible_players['position'] == player['position']) &  # Same position
             (eligible_players[criteria] > player[criteria])  # Higher xPts
             & (~eligible_players['element'].isin([player['element']]))  # Exclude the player itself
+            # & (eligible_players['team'].isin(current_team['team'].value_counts()[current_team['team'].value_counts() < 3].index))  # Check club limit
             ].sort_values(by=criteria, ascending=False)
 
+        print("Filtered replacements for: ", player[current_team_name_column], "are", filtered_replacements.shape[0])
         # Iterate over each eligible player to find potential replacements
         for _, replacement in filtered_replacements.iterrows():
             updated_squad_cost = current_team[current_team_cost_column].sum() - player[current_team_cost_column] + \
@@ -234,20 +233,20 @@ def handle_transfers(current_team: pd.DataFrame, eligible_players: pd.DataFrame,
 
     # Perform free transfers first
     transfers_made = 0
-    print("\n--- Performing Free Transfers ---")
     for transfer in potential_transfers[:free_transfers]:
         player_out, player_in, _ = transfer
         current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
         current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
+        print("Transferred: ", player_out['name'], "with", player_in['name'])
         transfers_made += 1
 
     # Perform additional transfers if xPts improvement is greater than the transfer threshold
-    print("\n--- Performing Paid Transfers ---")
     for transfer in potential_transfers[free_transfers:]:
         player_out, player_in, xPts_difference = transfer
         if xPts_difference > transfer_threshold:
             current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
             current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
+            print("Transferred: ", player_out['name'], "with", player_in['name'])
             transfers_made += 1
 
     print(f"\nTotal transfers made: {transfers_made}")
@@ -263,12 +262,11 @@ def select_best_11(squad, criteria="xPts"):
     """
     Selects the best 11 players from the squad, ensuring position constraints are met, including limiting to 1 goalkeeper.
     """
-    # Select the best 1 goalkeeper for the starting 11
     best_11 = pd.concat([
-        squad[squad['position'] == 'GK'].head(1),
-        squad[squad['position'] == 'DEF'].head(3),
-        squad[squad['position'] == 'MID'].head(3),
-        squad[squad['position'] == 'FWD'].head(1)
+        squad[squad['position'] == 'GK'].sort_values(by=criteria, ascending=False).head(1),
+        squad[squad['position'] == 'DEF'].sort_values(by=criteria, ascending=False).head(3),
+        squad[squad['position'] == 'MID'].sort_values(by=criteria, ascending=False).head(3),
+        squad[squad['position'] == 'FWD'].sort_values(by=criteria, ascending=False).head(1)
     ])
 
     remaining_spots = 11 - len(best_11)
@@ -279,7 +277,7 @@ def select_best_11(squad, criteria="xPts"):
         if remaining_spots == 0:
             break
         # Add the player only if it's not a goalkeeper (GK) or if we already have 1 GK in best 11
-        if player['position'] != 'GK':
+        if player['position'] != 'GK' or best_11[best_11['position'] == 'GK'].shape[0] == 1:
             # Before concatenating, drop any columns that are all NaN from the player DataFrame
             player_df = player.to_frame().T.dropna(axis=1, how='all')
 

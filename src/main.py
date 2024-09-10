@@ -13,7 +13,7 @@ def main():
         current_team = load_team_data(gw=gw - 1)
 
         # Build the squad
-        squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=2, transfer_threshold=2)
+        squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=1, transfer_threshold=2)
 
         # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
         predicted_points = best_11["xPts"].sum() + captain["xPts"]
@@ -28,7 +28,8 @@ def main():
                 f"{player['web_name' if 'web_name' in player else 'name']} - "
                 f"Position: {player['position' if 'position' in player else 'element_type']} - "
                 f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
-                f"Points: {player['total_points']}"
+                f"Points: {player['total_points']} - "
+                f"xPts: {player['xPts']}"
             )
 
         # Display the best starting 11
@@ -38,6 +39,7 @@ def main():
                 f"{player['web_name' if 'web_name' in player else 'name']} - "
                 f"Position: {player['position' if 'position' in player else 'element_type']} - "
                 f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
+                f"Points: {player['total_points']} - "
                 f"xPts: {player['xPts']}"
             )
 
