@@ -28,7 +28,6 @@ def main():
                 f"{player['web_name' if 'web_name' in player else 'name']} - "
                 f"Position: {player['position' if 'position' in player else 'element_type']} - "
                 f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
-                f"Points: {player['total_points']} - "
                 f"xPts: {player['xPts']}"
             )
 
@@ -39,7 +38,6 @@ def main():
                 f"{player['web_name' if 'web_name' in player else 'name']} - "
                 f"Position: {player['position' if 'position' in player else 'element_type']} - "
                 f"Cost: {player['now_cost' if 'now_cost' in player else 'value']} - "
-                f"Points: {player['total_points']} - "
                 f"xPts: {player['xPts']}"
             )
 

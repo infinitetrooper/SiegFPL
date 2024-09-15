@@ -122,7 +122,7 @@ def load_team_data(gw, team_id=1365773):
     # Check if the file exists, if not fetch the data
     if not os.path.exists(file_path):
         print(f"Data file not found for team {team_id} in GW {gw}. Fetching data...")
-        fetch_team_gw_data(team_id, gw)  # Fetch the data if it doesn't exist
+        fetch_team_gw_data(gw, team_id)  # Fetch the data if it doesn't exist
 
         # Double-check if the file was saved correctly
         if not os.path.exists(file_path):
