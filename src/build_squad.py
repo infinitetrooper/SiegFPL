@@ -1,7 +1,7 @@
 import pandas as pd
-pd.set_option('future.no_silent_downcasting', True)
 from x_pts import calculate_expected_points, predict_future_xPts
-from load_data import load_latest_data, create_current_team_df
+from load_data import create_current_team_df
+pd.set_option('future.no_silent_downcasting', True)
 
 def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     """

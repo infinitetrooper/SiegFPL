@@ -1,8 +1,5 @@
-import pandas as pd
-from x_pts import calculate_expected_points, predict_future_xPts
-from load_data import load_and_filter_data, load_team_data
-from build_squad import pick_best_squad, handle_transfers, select_best_11, get_eligible_players_for_gw
-import gc
+from load_data import load_and_filter_data
+from build_squad import pick_best_squad, get_eligible_players_for_gw
 
 def simulate_season_2023_24():
     # Load the initial data for the season

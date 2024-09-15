@@ -1,4 +1,4 @@
-from load_data import load_and_filter_data, load_and_filter_all_seasons_data
+from load_data import load_and_filter_all_seasons_data
 from x_pts import calculate_expected_points
 
 

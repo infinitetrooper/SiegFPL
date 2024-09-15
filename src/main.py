@@ -2,7 +2,6 @@ from build_squad import pick_best_squad, get_eligible_players_for_gw
 from load_data import load_and_filter_data, load_team_data
 from load_data import load_latest_data
 
-
 def main():
     try:
         # Fetch FPL data
