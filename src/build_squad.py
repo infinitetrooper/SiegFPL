@@ -155,7 +155,6 @@ def select_new_squad(player_data, budget, cost_column, criteria):
 
     return squad if not squad.empty else None
 
-
 def handle_transfers(current_team: pd.DataFrame, eligible_players: pd.DataFrame, free_transfers: int,
                      transfer_threshold: int, criteria: str = "xPts") -> pd.DataFrame:
     """
