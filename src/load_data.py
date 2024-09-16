@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import os
 from datetime import datetime
-from get_data import clone_fpl_repo, fetch_team_gw_data
+from src.get_data import clone_fpl_repo, fetch_team_gw_data
 
 def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     """
