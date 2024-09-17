@@ -4,3 +4,4 @@ pandas
 GitPython
 LinearRegression
 scikit-learn
+numpy
