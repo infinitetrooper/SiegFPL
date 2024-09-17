@@ -139,8 +139,8 @@ def select_best_squad_ilp(player_data, budget, cost_column, criteria):
 
     return squad
 
-def handle_transfers(current_team: pd.DataFrame, eligible_players: pd.DataFrame, free_transfers: int,
-                     transfer_threshold: int, criteria: str = "xPts") -> pd.DataFrame:
+def handle_transfers(current_team, eligible_players, free_transfers,
+                     transfer_threshold, criteria="xPts"):
     """
     Handles transfers to improve the current team based on xPts criteria.
     1. For each position, find the lowest xPts player.
