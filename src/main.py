@@ -78,14 +78,14 @@ def get_game_week():
 
 def get_wild_card_usage():
     """
-    Prompts the user to ask if they're using a while card this week.
+    Prompts the user to ask if they're using a wildcard this week.
 
     Returns:
-        bool: True if the user is using a while card, False otherwise.
+        bool: True if the user is using a wildcard, False otherwise.
     """
     while True:
         try:
-            wild_card_usage = input("Are you using a while card this week? (Y/N): ").lower()
+            wild_card_usage = input("Are you using a wildcard this week? (Y/N): ").lower()
             if wild_card_usage == "Y" or wild_card_usage == "y":
                 return True
             elif wild_card_usage == "N" or wild_card_usage == "n":

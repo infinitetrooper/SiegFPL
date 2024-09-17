@@ -1,4 +1,5 @@
 import pandas as pd
+import pulp
 from x_pts import calculate_expected_points, predict_future_xPts
 from load_data import create_current_team_df
 pd.set_option('future.no_silent_downcasting', True)
@@ -89,7 +90,8 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
 
     if prev_squad is None:
         # Pick a new squad
-        squad = select_new_squad(player_data, budget, cost_column, criteria)
+        # squad = select_new_squad(player_data, budget, cost_column, criteria)
+        squad = select_best_squad_ilp(player_data, budget, cost_column, criteria)
     else:
         # Use the handle_transfers function to update the squad
         current_team = create_current_team_df(picks_df=prev_squad, player_data=player_data)
@@ -103,57 +105,39 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
     captain = choose_captain(best_11, criteria)
     return squad, best_11, captain
 
-def select_new_squad(player_data, budget, cost_column, criteria):
-    """
-    Selects a new squad within the given budget.
-    """
-    selected_goalkeepers = []
-    selected_defenders = []
-    selected_midfielders = []
-    selected_forwards = []
+def select_best_squad_ilp(player_data, budget, cost_column, criteria):
+    # Define the problem
+    prob = pulp.LpProblem("Squad_Selection", pulp.LpMaximize)
 
-    remaining_budget = budget
-    position_limits = {
-        'GK': 2,
-        'DEF': 5,
-        'MID': 5,
-        'FWD': 3
-    }
+    # Decision variables
+    player_vars = pulp.LpVariable.dicts("player", player_data.index, cat='Binary')
 
+    # Objective function: Maximize total xPts
+    prob += pulp.lpSum([player_data.loc[i, criteria] * player_vars[i] for i in player_data.index])
+
+    # Constraint: Total cost should be less than or equal to budget
+    prob += pulp.lpSum([player_data.loc[i, cost_column] * player_vars[i] for i in player_data.index]) <= budget
+
+    # Constraints: Position requirements
+    position_limits = {'GK': 2, 'DEF': 5, 'MID': 5, 'FWD': 3}
     for position, limit in position_limits.items():
-        position_players = player_data[player_data['position'] == position]
+        prob += pulp.lpSum([player_vars[i] for i in player_data.index if player_data.loc[i, 'position'] == position]) == limit
 
-        for _, player in position_players.iterrows():
-            if position == 'GK' and len(selected_goalkeepers) < limit and player[cost_column] <= remaining_budget:
-                selected_goalkeepers.append(player)
-                remaining_budget -= player[cost_column]
-            elif position == 'DEF' and len(selected_defenders) < limit and player[cost_column] <= remaining_budget:
-                selected_defenders.append(player)
-                remaining_budget -= player[cost_column]
-            elif position == 'MID' and len(selected_midfielders) < limit and player[cost_column] <= remaining_budget:
-                selected_midfielders.append(player)
-                remaining_budget -= player[cost_column]
-            elif position == 'FWD' and len(selected_forwards) < limit and player[cost_column] <= remaining_budget:
-                selected_forwards.append(player)
-                remaining_budget -= player[cost_column]
+    # Constraint: Maximum of 3 players from the same team
+    for team in player_data['team'].unique():
+        prob += pulp.lpSum([player_vars[i] for i in player_data.index if player_data.loc[i, 'team'] == team]) <= 3
 
-    squad = pd.DataFrame(selected_goalkeepers + selected_defenders + selected_midfielders + selected_forwards)
+    # Solve the problem with suppressed output
+    prob.solve(pulp.PULP_CBC_CMD(msg=False))
 
-    while squad[cost_column].sum() > budget:
-        lowest_xPts_player = squad.sort_values(by=criteria).iloc[0]
-        position = lowest_xPts_player['position']
-        replacements = player_data[(player_data['position'] == position) &
-                                   (~player_data.index.isin(squad.index)) &
-                                   (player_data[cost_column] < lowest_xPts_player[cost_column])]
+    # Print the status of the solution
+    print("Status:", pulp.LpStatus[prob.status])
 
-        if not replacements.empty:
-            replacement = replacements.sort_values(by=criteria, ascending=False).iloc[0]
-            squad = squad.drop(lowest_xPts_player.name)
-            squad = pd.concat([squad, replacement.to_frame().T])
-        else:
-            break
+    # Extract the selected players
+    selected_players = [i for i in player_data.index if player_vars[i].varValue == 1]
+    squad = player_data.loc[selected_players]
 
-    return squad if not squad.empty else None
+    return squad
 
 def handle_transfers(current_team: pd.DataFrame, eligible_players: pd.DataFrame, free_transfers: int,
                      transfer_threshold: int, criteria: str = "xPts") -> pd.DataFrame:
