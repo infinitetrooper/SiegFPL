@@ -9,7 +9,6 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     """
     Returns a DataFrame of eligible players for a given game week, with additional calculations like average 3-week ICT index and expected points (xPts).
     """
-    # Ensure required columns are present and appropriately mapped
     required_columns = {'element_type', 'position', 'element', 'xPts'}
     if not required_columns.issubset(merged_gw_df.columns):
         if "element_type" not in merged_gw_df.columns and "position" in merged_gw_df.columns:
