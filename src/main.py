@@ -8,7 +8,7 @@ def main():
         gw = get_game_week()
         wildcard = get_wild_card_usage()
 
-        fpl_data = load_and_filter_data(year="2024-25", min_minutes=0, min_gw=0)
+        fpl_data = load_and_filter_data(year="2024-25", min_minutes=60, min_gw=3)
 
         eligible_players = get_eligible_players_for_gw(gw=gw, merged_gw_df=fpl_data, latest_data=load_latest_data())
         current_team = load_team_data(gw=gw - 1)
