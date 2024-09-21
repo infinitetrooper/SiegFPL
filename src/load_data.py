@@ -93,7 +93,6 @@ def load_latest_data():
     if os.path.exists(file_path):
         with open(file_path, "r") as json_file:
             data = json.load(json_file)
-            print(f"Loaded data from {file_path}")
             return data['elements']
     else:
         raise FileNotFoundError(f"Data file not found: {file_path}")

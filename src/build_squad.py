@@ -52,7 +52,6 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     eligible_df = eligible_df[eligible_df["avg_3w_ict"] > 0].copy()
 
     if latest_data is not None:
-        print("Using latest data in getting eligible players.")
         # Convert latest_data into a DataFrame with relevant columns
         latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(
             columns={"id": "element"}
@@ -217,6 +216,7 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
 
     # Update the current team with the optimal transfers
     for player_out, player_in in optimal_transfers:
+        print(f"Transfer {player_out['name']} to {player_in['name']}")
         current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
         current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
 
@@ -257,5 +257,3 @@ def choose_captain(best_11, criteria="xPts"):
     """
     captain = best_11.sort_values(by=criteria, ascending=False).iloc[0]
     return captain
-
-
