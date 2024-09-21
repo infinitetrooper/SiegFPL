@@ -5,3 +5,5 @@ GitPython
 LinearRegression
 scikit-learn
 numpy
+statsmodels
+matplotlib
