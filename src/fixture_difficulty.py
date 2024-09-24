@@ -1,6 +1,4 @@
 import pandas as pd
-import statsmodels.api as sm  # For detailed statistical analysis
-import matplotlib.pyplot as plt
 
 # Current date in yyyy-mm-dd format
 current_date = pd.Timestamp.now().strftime("%Y-%m-%d")
@@ -23,3 +21,4 @@ fixtures = fixtures.rename(columns={'id': 'fixture'})
 # Merge fixtures and merged_gw on 'GW' and fixture
 merged_gw = merged_gw.merge(fixtures, on=['GW', 'fixture'], how='left')
 
+print(merged_gw.head())
