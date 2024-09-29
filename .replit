@@ -1,5 +1,5 @@
 modules = ["python-3.12"]
-run = "python src/fixture_difficulty.py"
+run = "python src/main.py"
 
 [nix]
 channel = "stable-24_05"
