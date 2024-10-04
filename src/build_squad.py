@@ -181,6 +181,7 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
     # Calculate the current squad cost and set the maximum budget
     current_squad_cost = current_team[current_team_cost_column].sum()
     max_budget = max(current_squad_cost, 1000)
+    print(f"Current Squad Cost: {current_squad_cost}")
     
     # Knapsack algorithm to maximize points gain considering transfer penalties and budget constraints
     n = len(potential_transfers)
@@ -214,6 +215,15 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
             optimal_transfers.append((player_out, player_in))
             w -= 1
 
+    # Remove duplicate entries in optimal_transfers without converting to a dictionary
+    seen_players = set()
+    unique_transfers = []
+    for player_out, player_in in optimal_transfers:
+        if player_out['element'] not in seen_players:
+            unique_transfers.append((player_out, player_in))
+            seen_players.add(player_out['element'])
+    optimal_transfers = unique_transfers
+    
     # Update the current team with the optimal transfers
     for player_out, player_in in optimal_transfers:
         print(f"Transfer {player_out['name']} to {player_in['name']}")
