@@ -137,18 +137,19 @@ def select_best_squad_ilp(player_data, budget, cost_column, criteria):
 
     return squad
 
+
 def optimize_transfers(current_team, eligible_players, free_transfers, transfer_penalty=4, criteria="xPts"):
     """
     Determine the optimal set of transfers to maximize points gain while considering transfer penalties, budget constraints,
     and team (club) constraints.
-    
+
     Args:
         current_team (pd.DataFrame): DataFrame containing the current team data.
         eligible_players (pd.DataFrame): DataFrame containing eligible players for the gameweek.
         free_transfers (int): Number of free transfers available.
         transfer_penalty (int): Penalty points for each transfer over the free transfers limit.
         criteria (str): The criteria to base the transfers on, typically "xPts".
-        
+
     Returns:
         pd.DataFrame: Updated squad DataFrame after making optimal transfers.
     """
@@ -158,7 +159,7 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
     current_team_name_column = "web_name" if "web_name" in current_team.columns else "name"
     eligible_players_cost_column = "now_cost" if "now_cost" in eligible_players.columns else "value"
     eligible_players_name_column = "web_name" if "web_name" in eligible_players.columns else "name"
-    
+
     # Define the team column
     team_column = "team"
 
@@ -177,12 +178,12 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
 
     # Sort potential transfers by net_points_gain in descending order
     potential_transfers = sorted(potential_transfers, key=lambda x: x[2], reverse=True)
-    
+
     # Calculate the current squad cost and set the maximum budget
     current_squad_cost = current_team[current_team_cost_column].sum()
-    max_budget = max(current_squad_cost, 1000)
+    max_budget = 1000
     print(f"Current Squad Cost: {current_squad_cost}")
-    
+
     # Knapsack algorithm to maximize points gain considering transfer penalties and budget constraints
     n = len(potential_transfers)
     dp = np.zeros((n + 1, 2 * free_transfers + 1))
@@ -197,8 +198,7 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
         for j in range(2 * free_transfers + 1):
             if j >= transfer_cost:
                 new_team_count = team_counts.get(player_in[team_column], 0) + 1  # Include the new player
-                if (budget_used[i - 1][j] + player_in[eligible_players_cost_column] - player_out[current_team_cost_column] <= max_budget and
-                        new_team_count <= 3):
+                if new_team_count <= 3:
                     if dp[i][j] < dp[i - 1][j - transfer_cost] + point_gain - (j - free_transfers) * transfer_penalty:
                         dp[i][j] = dp[i - 1][j - transfer_cost] + point_gain - (j - free_transfers) * transfer_penalty
                         budget_used[i][j] = budget_used[i - 1][j - transfer_cost] + player_in[eligible_players_cost_column] - player_out[current_team_cost_column]
@@ -223,14 +223,23 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
             unique_transfers.append((player_out, player_in))
             seen_players.add(player_out['element'])
     optimal_transfers = unique_transfers
-    
-    # Update the current team with the optimal transfers
+
+    # Ensure final budget after all transfers is within the max budget
+    final_cost = current_squad_cost
     for player_out, player_in in optimal_transfers:
-        print(f"Transfer {player_out['name']} to {player_in['name']}")
-        current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
-        current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
+        final_cost = final_cost - player_out[current_team_cost_column] + player_in[eligible_players_cost_column]
+
+    if final_cost <= max_budget:
+        # Update the current team with the optimal transfers
+        for player_out, player_in in optimal_transfers:
+            print(f"Transfer {player_out['name']} to {player_in['name']}")
+            current_team = current_team[current_team['element'] != player_out['element']]  # Remove old player
+            current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
+    else:
+        print("No valid transfers found within the budget constraint.")
 
     return current_team
+
 
 def select_best_11(squad, criteria="xPts"):
     """

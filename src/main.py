@@ -15,10 +15,10 @@ def main():
 
         if wildcard:
             # Build the squad
-            squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=None, free_transfers=1, transfer_threshold=2)
+            squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=None, free_transfers=2, transfer_threshold=2)
         else:
              # Build the squad
-             squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=1, transfer_threshold=2)
+             squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=2, transfer_threshold=2)
              
 
         # Calculate predicted points (sum of starting 11 xPts with captain’s points doubled)
