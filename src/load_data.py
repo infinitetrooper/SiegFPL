@@ -202,5 +202,21 @@ def create_current_team_df(picks_df, player_data):
 
     return updated_picks_df
 
+def load_fixture_data(year="2024-25"):
+    # Current date in yyyy-mm-dd format
+    current_date = pd.Timestamp.now().strftime("%Y-%m-%d")
+
+    # Load merged_gw and fixtures data
+    fixtures_path = f'fpl-data/{current_date}/data/{year}/fixtures.csv'
+    fixtures = pd.read_csv(fixtures_path)
+    fixtures['event'] = fixtures['event'].astype(int)
+
+    # Replace 'event' with 'gw' in fixtures DataFrame
+    fixtures = fixtures.rename(columns={'event': 'GW'})
+    fixtures = fixtures.rename(columns={'id': 'fixture'})
+
+    return fixtures
+
+
 if __name__ == "__main__":
     load_team_data(gw=3)

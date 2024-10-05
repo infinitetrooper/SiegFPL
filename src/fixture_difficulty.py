@@ -1,17 +1,8 @@
 import pandas as pd
+import load_data
 
-# Current date in yyyy-mm-dd format
-current_date = pd.Timestamp.now().strftime("%Y-%m-%d")
-
-# Load merged_gw and fixtures data
-merged_gw_path = f'fpl-data/{current_date}/data/2023-24/gws/merged_gw.csv'
-fixtures_path = f'fpl-data/{current_date}/data/2023-24/fixtures.csv'
-
-merged_gw = pd.read_csv(merged_gw_path)
-fixtures = pd.read_csv(fixtures_path)
-
-merged_gw['GW'] = merged_gw['GW'].astype(int)
-fixtures['event'] = fixtures['event'].astype(int)
+merged_gw = load_data.load_and_filter_data(year="2023-24")
+fixtures = load_data.load_fixture_data(year="2023-24")
 
 # Filter out players who have not played any minutes
 to_include = merged_gw['minutes'] > 0
@@ -54,10 +45,6 @@ avg_points_by_position = merged_gw.groupby(['position'])['total_points'].mean().
 
 # Calculate average difficulty for position
 avg_difficulty_by_position = merged_gw.groupby(['position'])['effective_difficulty'].mean().reset_index()
-
-# Write the merged_gw DataFrame to a CSV file
-output_path = f'fpl-data/{current_date}/data/2023-24/merged_fixture_difficulty.csv'
-merged_gw.to_csv(output_path, index=False)
 
 print(avg_points_by_difficulty)
 print(avg_points_by_position)

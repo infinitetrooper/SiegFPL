@@ -137,7 +137,6 @@ def select_best_squad_ilp(player_data, budget, cost_column, criteria):
 
     return squad
 
-
 def optimize_transfers(current_team, eligible_players, free_transfers, transfer_penalty=4, criteria="xPts"):
     """
     Determine the optimal set of transfers to maximize points gain while considering transfer penalties, budget constraints,
@@ -239,7 +238,6 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
         print("No valid transfers found within the budget constraint.")
 
     return current_team
-
 
 def select_best_11(squad, criteria="xPts"):
     """
