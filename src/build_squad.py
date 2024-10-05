@@ -53,9 +53,7 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
 
     if latest_data is not None:
         # Convert latest_data into a DataFrame with relevant columns
-        latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(
-            columns={"id": "element"}
-        )
+        latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(columns={"id": "element"})
 
         # Merge eligible_df with latest_cost_df on the element column
         eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left")
@@ -166,9 +164,9 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
     potential_transfers = []
     for _, player_out in current_team.iterrows():
         possible_replacements = eligible_players[
-            (eligible_players['position'] == player_out['position']) &  # Same position
-            (eligible_players[criteria] > player_out[criteria]) &  # Higher criteria value
-            (~eligible_players['element'].isin(current_team['element']))  # Not already in the team
+            (eligible_players['position'] == player_out['position']) & 
+            (eligible_players[criteria] > player_out[criteria]) & 
+            (~eligible_players['element'].isin(current_team['element']))
         ]
 
         for _, player_in in possible_replacements.iterrows():
@@ -196,7 +194,7 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
         transfer_cost = 1  # One transfer used
         for j in range(2 * free_transfers + 1):
             if j >= transfer_cost:
-                new_team_count = team_counts.get(player_in[team_column], 0) + 1  # Include the new player
+                new_team_count = team_counts.get(player_in[team_column], 0) + 1
                 if new_team_count <= 3:
                     if dp[i][j] < dp[i - 1][j - transfer_cost] + point_gain - (j - free_transfers) * transfer_penalty:
                         dp[i][j] = dp[i - 1][j - transfer_cost] + point_gain - (j - free_transfers) * transfer_penalty
