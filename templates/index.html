@@ -1,0 +1,21 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Data Input</title>
+</head>
+<body>
+    <h1>Enter Team ID and Game Week</h1>
+    <form action="{{ url_for('submit') }}" method="post">
+        <label for="team_id">Team ID:</label>
+        <input type="text" id="team_id" name="team_id" required>
+        <br>
+        <label for="game_week">Game Week:</label>
+        <input type="text" id="game_week" name="game_week" required>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
