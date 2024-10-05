@@ -2,7 +2,8 @@ import pandas as pd
 import pulp
 import numpy as np
 from x_pts import calculate_expected_points, predict_future_xPts
-from load_data import create_current_team_df
+from load_data import create_current_team_df, load_fixture_data
+from fixture_difficulty import scale_pts_by_difficulty
 pd.set_option('future.no_silent_downcasting', True)
 
 def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
@@ -56,7 +57,7 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
         latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(columns={"id": "element"})
 
         # Merge eligible_df with latest_cost_df on the element column
-        eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left")
+        eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left", indicator=False)
 
         # Fill missing values for "chance_of_playing_next_round" with 100
         eligible_df["chance_of_playing_next_round"] = eligible_df["chance_of_playing_next_round"].fillna(100)
@@ -64,11 +65,51 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
         # Assign the "value" column as "now_cost"
         eligible_df["value"] = eligible_df["now_cost"]
 
+    fixtures = load_fixture_data(year="2024-25")
+
+    eligible_df = pd.merge(eligible_df, fixtures, on=['GW', 'fixture'], how="left")
+    eligible_df['player_team'] = eligible_df.apply(lambda row: row['team_h'] if row['was_home'] == 1 else row['team_a'], axis=1)
+
+    gw_fixtures = fixtures[fixtures['GW'] == gw]
+    
+    home_df = pd.merge(
+        eligible_df,
+        gw_fixtures,
+        left_on="player_team",
+        right_on=["team_h"],
+        suffixes=("", "_next")
+    )
+
+    away_df = pd.merge(
+        eligible_df,
+        gw_fixtures,
+        left_on="player_team",
+        right_on=["team_a"],
+        suffixes=("", "_next")
+    )
+
+    eligible_df = pd.concat([home_df, away_df], ignore_index=True)
+
+    eligible_df['difficulty'] = eligible_df.apply(
+        lambda row: row['team_h_difficulty_next'] if row['player_team'] == row['team_h_next'] else row['team_a_difficulty_next'], axis=1)
 
     # Step 7: Add xPts for these players
     position_coefficients = calculate_expected_points()
+    difficulty_factors = scale_pts_by_difficulty()
+    
+    # Merge scale_factor based on position and difficulty into eligible_df
+    eligible_df = pd.merge(
+        eligible_df,
+        difficulty_factors,
+        on=["position", "difficulty"],
+        how="left"
+    )
+
     eligible_df["xPts"] = eligible_df.apply(
-        lambda row: round(predict_future_xPts(row["avg_3w_ict"], row["position"], position_coefficients), 2), axis=1
+        lambda row: round(
+            predict_future_xPts(row["avg_3w_ict"], row["position"], position_coefficients, row["scale_factor"]),
+            2),
+        axis=1
     )
 
     return eligible_df

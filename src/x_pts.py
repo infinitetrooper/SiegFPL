@@ -1,5 +1,6 @@
 from statistics import correlation
 
+from pulp import re
 from sklearn.linear_model import LinearRegression
 from load_data import load_and_filter_data, load_and_filter_all_seasons_data
 import pandas as pd
@@ -44,22 +45,22 @@ def calculate_expected_points(df=load_and_filter_data(), criteria="ict_index"):
             "correlation": model.score(X, y)
         }
 
-        # print(f"Position: {position} | Criteria: {criteria} | Coefficient: {model.coef_[0]} | Intercept: {model.intercept_} | Points Trained: {y.size}")
-
     return position_coefficients
 
-def predict_future_xPts(average_ict, position, position_coefficients):
+def predict_future_xPts(average_ict, position, position_coefficients, scale_factor):
     """
-    Predicts the expected points (xPts) based on the 3-week average ICT index for a specific position.
+    Predicts the expected points (xPts) based on the 3-week average ICT index for a specific position, adjusted by fixture difficulty.
 
     :param average_ict: The 3-week average ICT index for a player
     :param position: The position of the player (GK, DEF, MID, FWD)
     :param position_coefficients: A dictionary containing the coefficients and intercepts for each position
+    :param scale_factor: Scale factor based on fixture difficulty
     :return: Predicted expected points (xPts)
     """
     coef = position_coefficients[position]["coef"]
     intercept = position_coefficients[position]["intercept"]
-    return (coef * average_ict) + intercept
+    xPts = ((coef * average_ict) + intercept) * scale_factor
+    return xPts
 
 if __name__ == "__main__":
     calculate_expected_points()

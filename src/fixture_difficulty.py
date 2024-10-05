@@ -9,28 +9,15 @@ def scale_pts_by_difficulty():
 	to_include = merged_gw['minutes'] > 0
 	merged_gw = merged_gw[to_include]
 	
-	# Replace 'event' with 'gw' in fixtures DataFrame
-	fixtures = fixtures.rename(columns={'event': 'GW'})
-	fixtures = fixtures.rename(columns={'id': 'fixture'})
-	
 	# Merge fixtures and merged_gw on 'GW' and fixture
-	# List of columns that are causing a conflict
-	conflicting_columns = ['kickoff_time', 'minutes', 'team_a_score', 'team_h_score']
-	
-	# Drop conflicting columns from fixtures
-	fixtures = fixtures.drop(columns=conflicting_columns)
-	
-	# Now merge the DataFrames without suffixes
 	merged_gw = merged_gw.merge(fixtures, on=['GW', 'fixture'], how='left', indicator=False)
 	
 	# Print the number of rows
 	print(f'Number of rows: {merged_gw.shape[0]}')
 	
-	
 	# Calculate effective difficulty based on home/away status
 	merged_gw['difficulty'] = merged_gw.apply(
-			lambda row: row['team_h_difficulty'] if row['was_home'] == 1 else row['team_a_difficulty'], axis=1
-	)
+			lambda row: row['team_h_difficulty'] if row['was_home'] == 1 else row['team_a_difficulty'], axis=1)
 	
 	# Ensure 'total_points' is numeric
 	merged_gw['total_points'] = pd.to_numeric(merged_gw['total_points'], errors='coerce')

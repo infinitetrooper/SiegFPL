@@ -214,6 +214,12 @@ def load_fixture_data(year="2024-25"):
     fixtures = fixtures.rename(columns={'event': 'GW'})
     fixtures = fixtures.rename(columns={'id': 'fixture'})
 
+    # List of columns that are causing a conflict
+    conflicting_columns = ['kickoff_time', 'minutes', 'team_a_score', 'team_h_score']
+
+    # Drop conflicting columns from fixtures
+    fixtures = fixtures.drop(columns=conflicting_columns)
+
     return fixtures
 
 
