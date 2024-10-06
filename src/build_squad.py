@@ -276,6 +276,8 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
     else:
         print("No valid transfers found within the budget constraint.")
 
+    print(f"Final Squad Cost: {current_team[current_team_cost_column].sum()}")
+
     return current_team
 
 def select_best_11(squad, criteria="xPts"):
