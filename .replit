@@ -9,6 +9,6 @@ run = ["sh", "-c", "python app.py"]
 deploymentTarget = "cloudrun"
 
 [[ports]]
-localPort = 5000
+localPort = 80
 externalPort = 80
 exposeLocalhost = true
