@@ -91,26 +91,43 @@
             margin-top: 20px;
         }
     </style>
+    <script>
+        function loadStoredValues() {
+            const teamId = localStorage.getItem('teamId') || '';
+            const gameWeek = localStorage.getItem('gameWeek') || '';
+            document.getElementById('team_id').value = teamId;
+            document.getElementById('game_week').value = gameWeek;
+        }
+
+        function saveValues() {
+            const teamId = document.getElementById('team_id').value;
+            const gameWeek = document.getElementById('game_week').value;
+            localStorage.setItem('teamId', teamId);
+            localStorage.setItem('gameWeek', gameWeek);
+        }
+
+        window.onload = loadStoredValues;
+    </script>
 </head>
 <body>
     <h1>FPL Best Squad Generator</h1>
-    
+
     <div class="container">
         {% if error %}
         <p class="error">{{ error }}</p>
         {% endif %}
-        <form method="POST">
+        <form method="POST" onsubmit="saveValues()">
             <label for="team_id">Team ID:</label>
             <input type="number" id="team_id" name="team_id" required>
-            
+
             <label for="game_week">Game Week:</label>
             <input type="number" id="game_week" name="game_week" required>
-            
+
             <label for="wildcard">
                 <input type="checkbox" id="wildcard" name="wildcard">
                 Using Wildcard
             </label>
-            
+
             <input type="submit" value="Get Best Squad">
         </form>
     </div>
