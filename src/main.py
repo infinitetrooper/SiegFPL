@@ -94,7 +94,7 @@ def get_wild_card_usage():
         except ValueError:
             print("Invalid input. Please enter 'Y' or 'N'.")
 
-def get_best_squad(team_id, game_week, wildcard=False):
+def get_best_squad(team_id, game_week, free_transfers, wildcard=False):
     try:
         fpl_data = load_and_filter_data(year="2024-25", min_minutes=60, min_gw=3)
         eligible_players = get_eligible_players_for_gw(gw=game_week, merged_gw_df=fpl_data, latest_data=load_latest_data())
@@ -104,7 +104,7 @@ def get_best_squad(team_id, game_week, wildcard=False):
         else:
             current_team = None
 
-        squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=2, transfer_threshold=4)
+        squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=free_transfers, transfer_threshold=4)
 
         predicted_points = best_11["xPts"].sum() + captain["xPts"]
 

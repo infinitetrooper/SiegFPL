@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPL Best Squad Generator</title>
+    <title>Sieg FPL 🚀</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -94,34 +94,45 @@
     <script>
         function loadStoredValues() {
             const teamId = localStorage.getItem('teamId') || '';
-            const gameWeek = localStorage.getItem('gameWeek') || '';
             document.getElementById('team_id').value = teamId;
+            
+            const gameWeek = localStorage.getItem('gameWeek') || '';
             document.getElementById('game_week').value = gameWeek;
+
+            const freeTransfers = localStorage.getItem('freeTransfers') || '';
+            document.getElementById('free_transfers').value = freeTransfers;
         }
 
         function saveValues() {
             const teamId = document.getElementById('team_id').value;
-            const gameWeek = document.getElementById('game_week').value;
             localStorage.setItem('teamId', teamId);
+            
+            const gameWeek = document.getElementById('game_week').value;
             localStorage.setItem('gameWeek', gameWeek);
+
+            const freeTransfers = document.getElementById('free_transfers').value;
+            localStorage.setItem('freeTransfers', freeTransfers);
         }
 
         window.onload = loadStoredValues;
     </script>
 </head>
 <body>
-    <h1>FPL Best Squad Generator</h1>
+    <h1>Sieg FPL 🚀</h1>
 
     <div class="container">
         {% if error %}
         <p class="error">{{ error }}</p>
         {% endif %}
         <form method="POST" onsubmit="saveValues()">
-            <label for="team_id">Team ID:</label>
+            <label for="team_id">Team ID</label>
             <input type="number" id="team_id" name="team_id" required>
 
-            <label for="game_week">Game Week:</label>
+            <label for="game_week">Game Week</label>
             <input type="number" id="game_week" name="game_week" required>
+
+            <label for="free_transfers">Available Free Transfers</label>
+            <input type="number" id="free_transfers" name="free_transfers" required>
 
             <label for="wildcard">
                 <input type="checkbox" id="wildcard" name="wildcard">

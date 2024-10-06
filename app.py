@@ -10,11 +10,12 @@ def index():
     if request.method == 'POST':
         team_id = request.form['team_id']
         game_week = request.form['game_week']
+        free_transfers = request.form['free_transfers']
         wildcard = request.form.get('wildcard') == 'on'
 
         try:
             squad, best_11, captain, predicted_points = get_best_squad(
-                int(team_id), int(game_week), wildcard)
+                int(team_id), int(game_week), int(free_transfers), wildcard)
             result = {
                 'squad': squad,
                 'best_11': best_11,
