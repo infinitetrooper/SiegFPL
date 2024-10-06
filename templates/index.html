@@ -4,23 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FPL Best Squad Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+        }
+        h1, h2 {
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="number"], input[type="checkbox"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 5px;
+        }
+        input[type="submit"] {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        input[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+        .error {
+            color: #e74c3c;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        .captain {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .predicted-points {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <h1>FPL Best Squad Generator</h1>
-    {% if error %}
-    <p style="color: red;">{{ error }}</p>
+    
+    <div class="container">
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
+        <form method="POST">
+            <label for="team_id">Team ID:</label>
+            <input type="number" id="team_id" name="team_id" required>
+            
+            <label for="game_week">Game Week:</label>
+            <input type="number" id="game_week" name="game_week" required>
+            
+            <label for="wildcard">
+                <input type="checkbox" id="wildcard" name="wildcard">
+                Using Wildcard
+            </label>
+            
+            <input type="submit" value="Get Best Squad">
+        </form>
+    </div>
+
+    {% if result %}
+    <div class="container">
+        <h2>Full Squad</h2>
+        <ul>
+        {% for player in result.squad.itertuples() %}
+            <li>{{ player.name }} - {{ player.position }} - Cost: {{ player.now_cost }} - xPts: {{ player.xPts }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <div class="container">
+        <h2>Best Starting 11</h2>
+        <ul>
+        {% for player in result.best_11.itertuples() %}
+            <li>{{ player.name }} - {{ player.position }} - Cost: {{ player.now_cost }} - xPts: {{ player.xPts }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <div class="container">
+        <h2>Captain</h2>
+        <p class="captain">{{ result.captain["name"] }} - xPts: {{ result.captain["xPts"] }} - Cost: {{ result.captain["now_cost"] }}</p>
+    </div>
+
+    <div class="predicted-points">
+        <h2>Predicted Points</h2>
+        <p>{{ result.predicted_points }}</p>
+    </div>
     {% endif %}
-    <form method="POST">
-        <label for="team_id">Team ID:</label>
-        <input type="number" id="team_id" name="team_id" required><br><br>
-        
-        <label for="game_week">Game Week:</label>
-        <input type="number" id="game_week" name="game_week" required><br><br>
-        
-        <label for="wildcard">Using Wildcard:</label>
-        <input type="checkbox" id="wildcard" name="wildcard"><br><br>
-        
-        <input type="submit" value="Get Best Squad">
-    </form>
 </body>
 </html>
