@@ -69,16 +69,19 @@
             margin-bottom: 15px;
             text-align: center;
         }
-        ul {
-            list-style-type: none;
-            padding: 0;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
-        li {
+        th, td {
             padding: 10px;
+            text-align: left;
             border-bottom: 1px solid #444;
         }
-        li:last-child {
-            border-bottom: none;
+        th {
+            background-color: #3498db;
+            color: #fff;
         }
         .captain {
             font-weight: bold;
@@ -90,12 +93,28 @@
             text-align: center;
             margin-top: 20px;
         }
+        .summary-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+        .summary-item h2 {
+            margin-bottom: 10px;
+        }
     </style>
     <script>
         function loadStoredValues() {
             const teamId = localStorage.getItem('teamId') || '';
             document.getElementById('team_id').value = teamId;
-            
+
             const gameWeek = localStorage.getItem('gameWeek') || '';
             document.getElementById('game_week').value = gameWeek;
 
@@ -106,7 +125,7 @@
         function saveValues() {
             const teamId = document.getElementById('team_id').value;
             localStorage.setItem('teamId', teamId);
-            
+
             const gameWeek = document.getElementById('game_week').value;
             localStorage.setItem('gameWeek', gameWeek);
 
@@ -144,32 +163,65 @@
     </div>
 
     {% if result %}
+    <div class="summary-container">
+        <div class="summary-item">
+            <h2>Predicted Points</h2>
+            <p class="predicted-points">{{ result.predicted_points }}</p>
+        </div>
+        <div class="summary-item">
+            <h2>Captain</h2>
+            <p class="captain">{{ result.captain["name"] }}</p>
+            <p>xPts: {{ result.captain["xPts"] }}</p>
+            <p>Cost: {{ result.captain["now_cost"] }}</p>
+        </div>
+    </div>
+
     <div class="container">
         <h2>Full Squad</h2>
-        <ul>
-        {% for player in result.squad.itertuples() %}
-            <li>{{ player.name }} - {{ player.position }} - Cost: {{ player.now_cost }} - xPts: {{ player.xPts }}</li>
-        {% endfor %}
-        </ul>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Cost</th>
+                    <th>xPts</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for player in result.squad.itertuples() %}
+                <tr>
+                    <td>{{ player.name }}</td>
+                    <td>{{ player.position }}</td>
+                    <td>{{ player.now_cost }}</td>
+                    <td>{{ player.xPts }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <div class="container">
         <h2>Best Starting 11</h2>
-        <ul>
-        {% for player in result.best_11.itertuples() %}
-            <li>{{ player.name }} - {{ player.position }} - Cost: {{ player.now_cost }} - xPts: {{ player.xPts }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-
-    <div class="container">
-        <h2>Captain</h2>
-        <p class="captain">{{ result.captain["name"] }} - xPts: {{ result.captain["xPts"] }} - Cost: {{ result.captain["now_cost"] }}</p>
-    </div>
-
-    <div class="predicted-points">
-        <h2>Predicted Points</h2>
-        <p>{{ result.predicted_points }}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Cost</th>
+                    <th>xPts</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for player in result.best_11.itertuples() %}
+                <tr>
+                    <td>{{ player.name }}</td>
+                    <td>{{ player.position }}</td>
+                    <td>{{ player.now_cost }}</td>
+                    <td>{{ player.xPts }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
     {% endif %}
 </body>
