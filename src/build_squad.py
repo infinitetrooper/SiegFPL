@@ -1,9 +1,9 @@
 import pandas as pd
 import pulp
 import numpy as np
-from x_pts import calculate_expected_points, predict_future_xPts
-from load_data import create_current_team_df, load_fixture_data
-from fixture_difficulty import scale_pts_by_difficulty
+from src.x_pts import calculate_expected_points, predict_future_xPts
+from src.load_data import create_current_team_df, load_fixture_data
+from src.fixture_difficulty import scale_pts_by_difficulty
 pd.set_option('future.no_silent_downcasting', True)
 
 def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):

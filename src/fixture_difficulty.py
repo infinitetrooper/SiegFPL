@@ -1,9 +1,9 @@
 import pandas as pd
-import load_data
+from src.load_data import load_and_filter_data, load_fixture_data
 
 def scale_pts_by_difficulty():
-	merged_gw = load_data.load_and_filter_data(year="2023-24")
-	fixtures = load_data.load_fixture_data(year="2023-24")
+	merged_gw = load_and_filter_data(year="2023-24")
+	fixtures = load_fixture_data(year="2023-24")
 	
 	# Filter out players who have not played any minutes
 	to_include = merged_gw['minutes'] > 0

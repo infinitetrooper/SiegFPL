@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Best Squad Result</title>
+</head>
+<body>
+    <h1>Your Best FPL Squad</h1>
+    
+    <h2>Full Squad</h2>
+    <ul>
+    {% for player in squad.itertuples() %}
+        <li>{{ player.name }} - {{ player.position }} - Cost: {{ player.now_cost }} - xPts: {{ player.xPts }}</li>
+    {% endfor %}
+    </ul>
+
+    <h2>Best Starting 11</h2>
+    <ul>
+    {% for player in best_11.itertuples() %}
+        <li>{{ player.name }} - {{ player.position }} - Cost: {{ player.now_cost }} - xPts: {{ player.xPts }}</li>
+    {% endfor %}
+    </ul>
+
+    <h2>Captain</h2>
+    <p>{{ captain.name }} - xPts: {{ captain.xPts }} - Cost: {{ captain.now_cost }}</p>
+
+    <h2>Predicted Points</h2>
+    <p>{{ predicted_points }}</p>
+
+    <a href="/">Back to Form</a>
+</body>
+</html>

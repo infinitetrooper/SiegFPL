@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Best Squad Generator</title>
+</head>
+<body>
+    <h1>FPL Best Squad Generator</h1>
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <label for="team_id">Team ID:</label>
+        <input type="number" id="team_id" name="team_id" required><br><br>
+        
+        <label for="game_week">Game Week:</label>
+        <input type="number" id="game_week" name="game_week" required><br><br>
+        
+        <label for="wildcard">Using Wildcard:</label>
+        <input type="checkbox" id="wildcard" name="wildcard"><br><br>
+        
+        <input type="submit" value="Get Best Squad">
+    </form>
+</body>
+</html>
