@@ -1,11 +1,11 @@
 modules = ["python-3.12"]
-run = "python app.py"
+run = "gunicorn --timeout 100 -b 0.0.0.0:80 app:app"
 
 [nix]
 channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "python app.py"]
+run = ["sh", "-c", "gunicorn --timeout 100 -b 0.0.0.0:80 app:app"]
 deploymentTarget = "cloudrun"
 
 [[ports]]
