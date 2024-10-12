@@ -37,6 +37,7 @@ def index():
         try:
             squad, best_11, captain, predicted_points = get_best_squad(
                 int(team_id), int(game_week), int(free_transfers), wildcard)
+            predicted_points = round(predicted_points)
             result = {
                 'squad': squad,
                 'best_11': best_11,

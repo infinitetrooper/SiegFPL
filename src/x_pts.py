@@ -59,6 +59,7 @@ def predict_future_xPts(average_ict, position, position_coefficients, scale_fact
     coef = position_coefficients[position]["coef"]
     intercept = position_coefficients[position]["intercept"]
     xPts = ((coef * average_ict) + intercept) * scale_factor
+    xPts = round(xPts, 1)
     return xPts
 
 if __name__ == "__main__":
