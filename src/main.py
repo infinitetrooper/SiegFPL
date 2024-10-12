@@ -104,11 +104,11 @@ def get_best_squad(team_id, game_week, free_transfers, wildcard=False):
         else:
             current_team = None
 
-        squad, best_11, captain = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=free_transfers, transfer_threshold=4)
+        squad, best_11, captain, transfers = pick_best_squad(player_data=eligible_players, prev_squad=current_team, free_transfers=free_transfers, transfer_threshold=4)
 
         predicted_points = best_11["xPts"].sum() + captain["xPts"]
 
-        return squad, best_11, captain, predicted_points
+        return squad, best_11, captain, predicted_points, transfers
 
     except Exception as e:
         raise Exception(f"An error occurred: {str(e)}")

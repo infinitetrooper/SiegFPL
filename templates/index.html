@@ -175,7 +175,25 @@
             <p>Cost: {{ result.captain["now_cost"] }}</p>
         </div>
     </div>
-
+    <div class="container">
+        <h2>Transfers</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Out</th>
+                    <th>In</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for transfer in result.transfers %}
+                <tr>
+                    <td>{{ transfer[0]['name'] }}</td>
+                    <td>{{ transfer[1]['name'] }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <div class="container">
         <h2>Full Squad</h2>
         <table>

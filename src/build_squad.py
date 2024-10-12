@@ -117,7 +117,7 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
 def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, free_transfers=1, transfer_threshold=4):
     """
     Picks the best squad if there is no previous squad. If a previous squad exists, it suggests transfers to improve the squad.
-    Returns the full squad, best 11 players, and the captain.
+    Returns the full squad, best 11 players, the captain, and the transfers made.
     """
     position_col = 'position' if 'position' in player_data.columns else 'element_type'
     if position_col == 'element_type':
@@ -126,13 +126,15 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
     cost_column = "now_cost" if "now_cost" in player_data.columns else "value"
     player_data = player_data.sort_values(by=criteria, ascending=False)
 
+    transfers = []  # Initialize transfers list
+
     if prev_squad is None:
         # Pick a new squad
         squad = select_best_squad_ilp(player_data, budget, cost_column, criteria)
     else:
         # Use the handle_transfers function to update the squad
         current_team = create_current_team_df(picks_df=prev_squad, player_data=player_data)
-        squad = optimize_transfers(current_team, player_data, free_transfers, transfer_threshold)
+        squad, transfers = optimize_transfers(current_team, player_data, free_transfers, transfer_threshold)
 
     # Ensure squad is not None before proceeding
     if squad is None or squad.empty:
@@ -140,7 +142,7 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
 
     best_11 = select_best_11(squad, criteria)
     captain = choose_captain(best_11, criteria)
-    return squad, best_11, captain
+    return squad, best_11, captain, transfers
 
 def select_best_squad_ilp(player_data, budget, cost_column, criteria):
     # Define the problem
@@ -275,10 +277,11 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
             current_team = pd.concat([current_team, player_in.to_frame().T])  # Add new player
     else:
         print("No valid transfers found within the budget constraint.")
+        optimal_transfers = []
 
     print(f"Final Squad Cost: {current_team[current_team_cost_column].sum()}")
 
-    return current_team
+    return current_team, optimal_transfers
 
 def select_best_11(squad, criteria="xPts"):
     """
