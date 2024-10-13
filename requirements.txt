@@ -8,4 +8,3 @@ numpy
 statsmodels
 matplotlib
 flask
-gunicorn

@@ -1,30 +1,9 @@
 from flask import Flask, render_template, request
-import signal
-from functools import wraps
 from src.main import get_best_squad
 
 app = Flask(__name__)
 
-# Timeout handler function
-def handler(signum, frame):
-    raise TimeoutError("Request timed out!")
-
-# Decorator to add timeout to a route
-def timeout(seconds=100):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            signal.signal(signal.SIGALRM, handler)
-            signal.alarm(seconds)  # Set the timeout
-            try:
-                return func(*args, **kwargs)
-            finally:
-                signal.alarm(0)  # Disable the alarm after the function completes
-        return wrapper
-    return decorator
-
 @app.route('/', methods=['GET', 'POST'])
-@timeout(100)
 def index():
     result = None
     error = None

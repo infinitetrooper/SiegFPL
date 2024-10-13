@@ -6,36 +6,36 @@ from git import Repo
 from datetime import datetime
 import time
 
+def download_file_from_github(file_path, local_path):
+    """
+    Downloads a file from a GitHub repository and saves it locally.
+    
+    Args:
+    repo_url (str): The base URL of the GitHub repository.
+    file_path (str): The path to the file within the repository.
+    local_path (str): The local path where the file should be saved.
+    """
+    repo_url="https://github.com/vaastav/Fantasy-Premier-League"
+    
+    # Construct the raw content URL
+    raw_url = f"{repo_url}/raw/master/{file_path}"
 
-def clone_fpl_repo():
-    # Define the repository URL
-    repo_url = "https://github.com/vaastav/Fantasy-Premier-League.git"
-
-    # Generate the folder name with the current date inside the project root
-    current_date = datetime.now().strftime("%Y-%m-%d")
-    project_root = os.path.dirname(os.path.dirname(__file__))  # Navigate to the project root
-    base_directory = os.path.join(project_root, "fpl-data")
-    folder_name = os.path.join(base_directory, current_date)
-    clone_directory = folder_name
-
-    # Check if today's data already exists
-    if os.path.exists(clone_directory):
-        print(f"Today's data already exists at {clone_directory}. No need to download again.")
-        return clone_directory
+    print(f"Downloading file from {raw_url}...")
+    
+    # Send a GET request to the URL
+    response = requests.get(raw_url)
+    
+    if response.status_code == 200:
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+        
+        # Write the content to the local file
+        with open(local_path, 'wb') as file:
+            file.write(response.content)
+        print(f"File successfully downloaded to {local_path}")
     else:
-        # Delete existing data in `/fpl-data/` if any
-        if os.path.exists(base_directory):
-            shutil.rmtree(base_directory)
-            print(f"Deleted existing data in {base_directory}.")
+        print(f"Failed to download file. Status code: {response.status_code}")
 
-        # Create the directory structure and clone the repository
-        os.makedirs(clone_directory)
-        Repo.clone_from(repo_url, clone_directory)
-        fetch_api_data()
-
-        print(f"Repository cloned to {clone_directory}")
-
-    return clone_directory
 
 def fetch_api_data():
     url = "https://fantasy.premierleague.com/api/bootstrap-static/"

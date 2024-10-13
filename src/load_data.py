@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import os
 from datetime import datetime
-from src.get_data import clone_fpl_repo, fetch_team_gw_data
+from src.get_data import fetch_team_gw_data, download_file_from_github, fetch_api_data
 
 def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     """
@@ -18,11 +18,13 @@ def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     project_root = os.path.dirname(os.path.dirname(__file__))  # Navigate to the project root
     current_date = datetime.now().strftime("%Y-%m-%d")
     file_path = os.path.join(project_root, "fpl-data", current_date, "data", year, "gws", "merged_gw.csv")
+    remote_path = f"data/{year}/gws/merged_gw.csv"
 
     # Check if the file exists, if not, download the repository
     if not os.path.exists(file_path):
-        print(f"{file_path} does not exist. Cloning the repository...")
-        clone_fpl_repo()  # Call the clone function from the get_repo file
+        print(f"{file_path} does not exist. Downloading the file....")
+        download_file_from_github(remote_path, file_path)
+        load_latest_data()
 
     # Load the CSV file
     df = pd.read_csv(file_path)
@@ -52,12 +54,12 @@ def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
     project_root = os.path.dirname(os.path.dirname(__file__))  # Navigate to the project root
     current_date = datetime.now().strftime("%Y-%m-%d")
     file_path = os.path.join(project_root, "fpl-data", current_date, "data", "cleaned_merged_seasons.csv")
+    remote_path = f"data/cleaned_merged_seasons.csv"
 
     # Check if the file exists, if not, download the repository
     if not os.path.exists(file_path):
-        print(f"{file_path} does not exist. Cloning the repository...")
-        clone_fpl_repo()  # Call the clone function from the get_repo file
-
+        print(f"{file_path} does not exist. Downloading file...")
+        download_file_from_github(remote_path, file_path)
     # Load the CSV file with dtype specified and low_memory=False to avoid DtypeWarning
     dtype_dict = {"column_name": str}  # Replace "column_name" with the name of the column(s) causing issues
     df = pd.read_csv(file_path, dtype=dtype_dict, low_memory=False)
@@ -89,13 +91,20 @@ def load_latest_data():
     current_date = datetime.now().strftime("%Y-%m-%d")
     file_path = os.path.join(fpl_data_dir, f"{current_date}.json")
 
+    if not os.path.exists(file_path):
+        fetch_api_data()
+
+        # Double-check if the file was saved correctly
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Failed to fetch latest data.")
+                                    
     # Load the JSON data from the file
-    if os.path.exists(file_path):
+    try:
         with open(file_path, "r") as json_file:
             data = json.load(json_file)
             return data['elements']
-    else:
-        raise FileNotFoundError(f"Data file not found: {file_path}")
+    except Exception as e:
+        raise FileNotFoundError(f"Failed to load data from {file_path}: {str(e)}")
 
 def load_team_data(gw, team_id=1365773):
     """
@@ -206,8 +215,16 @@ def load_fixture_data(year="2024-25"):
     current_date = pd.Timestamp.now().strftime("%Y-%m-%d")
 
     # Load merged_gw and fixtures data
-    fixtures_path = f'fpl-data/{current_date}/data/{year}/fixtures.csv'
-    fixtures = pd.read_csv(fixtures_path)
+    file_path = f'fpl-data/{current_date}/data/{year}/fixtures.csv'
+    remote_path = f"data/{year}/fixtures.csv"
+
+    # Check if the file exists, if not, download the repository
+    if not os.path.exists(file_path):
+        print(f"{file_path} does not exist. Downloading file...")
+        download_file_from_github(remote_path, file_path)
+    
+    
+    fixtures = pd.read_csv(file_path)
     fixtures['event'] = fixtures['event'].astype(int)
 
     # Replace 'event' with 'gw' in fixtures DataFrame
