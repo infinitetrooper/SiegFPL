@@ -36,7 +36,6 @@ def download_file_from_github(file_path, local_path):
     else:
         print(f"Failed to download file. Status code: {response.status_code}")
 
-
 def fetch_api_data():
     url = "https://fantasy.premierleague.com/api/bootstrap-static/"
     response = requests.get(url)
