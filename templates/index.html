@@ -59,14 +59,13 @@
     {% if result %}
     <div class="summary-container">
         <div class="summary-item">
-            <h2>Predicted Points</h2>
+            <h2>xPoints</h2>
             <p class="predicted-points">{{ result.predicted_points }}</p>
         </div>
         <div class="summary-item">
             <h2>Captain</h2>
-            <p class="captain">{{ result.captain["name"] }}</p>
-            <p>xPts: {{ result.captain["xPts"] }}</p>
-            <p>Cost: {{ result.captain["now_cost"] }}</p>
+            <p>{{ result.captain["name"] }}</p>
+            <p>xPoints: {{ result.captain["xPts"] }}</p>
         </div>
     </div>
     <div class="container">
@@ -96,7 +95,7 @@
                     <th>Name</th>
                     <th>Position</th>
                     <th>Cost</th>
-                    <th>xPts</th>
+                    <th>xPoints</th>
                 </tr>
             </thead>
             <tbody>
@@ -120,7 +119,7 @@
                     <th>Name</th>
                     <th>Position</th>
                     <th>Cost</th>
-                    <th>xPts</th>
+                    <th>xPoints</th>
                 </tr>
             </thead>
             <tbody>
