@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import os
 from datetime import datetime
-from src.get_data import fetch_team_gw_data, download_file_from_github, fetch_api_data
+from src.get_data import fetch_team_gw_data, download_file_from_github, fetch_api_data, cleanup_old_files
 
 def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
     """
@@ -25,6 +25,8 @@ def load_and_filter_data(year="2023-24", min_gw=10, min_minutes=60):
         print(f"{file_path} does not exist. Downloading the file....")
         download_file_from_github(remote_path, file_path)
         load_latest_data()
+        cleanup_old_files()
+        
 
     # Load the CSV file
     df = pd.read_csv(file_path)
@@ -108,9 +110,7 @@ def load_latest_data():
 
 def load_team_data(gw, team_id=1365773):
     """
-    Loads the saved FPL data from {project root}/fpl-data into a Pandas DataFrame using today's date.
-    If the file does not exist, it fetches the data first and then loads it.
-    Merges additional player data from the latest available data.
+    Fetches the team data for the specified game week and team ID and loads into a DataFrame.
 
     Args:
         team_id (int): The team ID.
@@ -119,30 +119,7 @@ def load_team_data(gw, team_id=1365773):
     Returns:
         pd.DataFrame: A DataFrame containing the FPL data, including the latest player information.
     """
-    # Get today's date in the format YYYY-MM-DD
-    current_date = datetime.now().strftime("%Y-%m-%d")
-
-    # Determine the project root and the file path
-    project_root = os.path.dirname(os.path.dirname(__file__))
-    fpl_data_dir = os.path.join(project_root, "fpl-data")
-    file_path = os.path.join(fpl_data_dir, f"{team_id}_gw_{gw}_{current_date}.json")
-
-    # Check if the file exists, if not fetch the data
-    if not os.path.exists(file_path):
-        print(f"Data file not found for team {team_id} in GW {gw}. Fetching data...")
-        fetch_team_gw_data(gw, team_id)  # Fetch the data if it doesn't exist
-
-        # Double-check if the file was saved correctly
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Failed to fetch data for team {team_id} in GW {gw}. File not found after fetch attempt.")
-
-    # Load the JSON data
-    try:
-        with open(file_path, "r") as json_file:
-            data = json.load(json_file)
-    except Exception as e:
-        raise FileNotFoundError(f"Failed to load data from {file_path}: {str(e)}")
-
+    data = fetch_team_gw_data(gw, team_id)
     # Convert the JSON data to a Pandas DataFrame
     picks = data.get("picks", [])
 
