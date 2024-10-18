@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sieg FPL - Your Fantasy Premier League Companion</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-G3Z5Y74FG9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-G3Z5Y74FG9');
+    </script>
     <script>
         function loadStoredValues() {
             const teamId = localStorage.getItem('teamId') || '';
