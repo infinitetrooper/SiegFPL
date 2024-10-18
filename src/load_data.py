@@ -121,7 +121,9 @@ def load_team_data(gw, team_id=1365773):
     """
     data = fetch_team_gw_data(gw, team_id)
     # Convert the JSON data to a Pandas DataFrame
-    picks = data.get("picks", [])
+    picks = data.get("picks", []) if data else []
+    
+    value = data["entry_history"]["value"]
 
     if not picks:
         raise ValueError(f"No picks data found in the loaded file for team {team_id} in GW {gw}.")
@@ -151,7 +153,7 @@ def load_team_data(gw, team_id=1365773):
         # Drop any unnecessary columns from the original df that were replaced by latest_df
         df = df.drop([col for col in df.columns if '_drop' in col], axis=1)
 
-    return df
+    return df, value
 
 def create_current_team_df(picks_df, player_data):
     """
@@ -215,7 +217,3 @@ def load_fixture_data(year="2024-25"):
     fixtures = fixtures.drop(columns=conflicting_columns)
 
     return fixtures
-
-
-if __name__ == "__main__":
-    load_team_data(gw=3)

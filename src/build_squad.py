@@ -134,7 +134,7 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
     else:
         # Use the handle_transfers function to update the squad
         current_team = create_current_team_df(picks_df=prev_squad, player_data=player_data)
-        squad, transfers = optimize_transfers(current_team, player_data, free_transfers, transfer_threshold)
+        squad, transfers = optimize_transfers(current_team, player_data, free_transfers, budget, transfer_penalty=transfer_threshold)
 
     # Ensure squad is not None before proceeding
     if squad is None or squad.empty:
@@ -178,7 +178,7 @@ def select_best_squad_ilp(player_data, budget, cost_column, criteria):
 
     return squad
 
-def optimize_transfers(current_team, eligible_players, free_transfers, transfer_penalty=4, criteria="xPts"):
+def optimize_transfers(current_team, eligible_players, free_transfers, value, criteria="xPts", transfer_penalty=4):
     """
     Determine the optimal set of transfers to maximize points gain while considering transfer penalties, budget constraints,
     and team (club) constraints.
@@ -220,9 +220,7 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
     potential_transfers = sorted(potential_transfers, key=lambda x: x[2], reverse=True)
 
     # Calculate the current squad cost and set the maximum budget
-    current_squad_cost = current_team[current_team_cost_column].sum()
-    max_budget = 1000
-    print(f"Current Squad Cost: {current_squad_cost}")
+    print(f"Current Squad Cost: {value}")
 
     # Knapsack algorithm to maximize points gain considering transfer penalties and budget constraints
     n = len(potential_transfers)
@@ -265,11 +263,11 @@ def optimize_transfers(current_team, eligible_players, free_transfers, transfer_
     optimal_transfers = unique_transfers
 
     # Ensure final budget after all transfers is within the max budget
-    final_cost = current_squad_cost
+    final_cost = value
     for player_out, player_in in optimal_transfers:
         final_cost = final_cost - player_out[current_team_cost_column] + player_in[eligible_players_cost_column]
 
-    if final_cost <= max_budget:
+    if final_cost <= value:
         # Update the current team with the optimal transfers
         for player_out, player_in in optimal_transfers:
             print(f"Transfer {player_out['name']} to {player_in['name']}")
