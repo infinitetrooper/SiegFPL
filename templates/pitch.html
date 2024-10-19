@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Team on Pitch</title>
+    <style>
+        .pitch {
+            width: 600px;
+            height: 800px;
+            background-color: #4CAF50;
+            position: relative;
+            margin: 20px auto;
+            border: 2px solid white;
+        }
+        .player {
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+        .GK { bottom: 5%; left: 50%; }
+        .DEF { bottom: 25%; }
+        .MID { bottom: 50%; }
+        .FWD { bottom: 75%; }
+        .TXkrm {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        .bvQCVH {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .cebDFJ img {
+            width: 46px;
+            height: auto;
+        }
+        .huoEoG {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .eypCPX {
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .gA-DNjC {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="pitch">
+        {% for player in best_11 %}
+            <div class="player {{ player.position }}" style="left: {{ player.x }}%;">
+                <button type="button" class="TXkrm">
+                    <span class="bvQCVH fxXomS">
+                        <span class="cebDFJ">
+                            <picture>
+                                {% if player.position == 'GK' %}
+                                    <img src="{{ url_for('static', filename='img/shirts/shirt_' + player.player_team|string + '_1-220.webp') }}"
+                                         alt="{{ player.name }}'s Shirt"
+                                         class="ileRrz">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename='img/shirts/shirt_' + player.player_team|string + '-220.webp') }}"
+                                         alt="{{ player.name }}'s Shirt"
+                                         class="ileRrz">
+                                {% endif %}
+                            </picture>
+                        </span>
+                        <span class="huoEoG">
+                            <span class="eypCPX">{{ player.name }}</span>
+                            <div class="gA-DNjC">{{ player.xPts }}</div>
+                        </span>
+                    </span>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
