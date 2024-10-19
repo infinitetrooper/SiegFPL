@@ -53,7 +53,6 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     eligible_df = eligible_df[eligible_df["avg_3w_ict"] > 0].copy()
 
     if latest_data is not None:
-        print(">>>>>>>>>>>>>>>>>>")
         # Convert latest_data into a DataFrame with relevant columns
         latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round", "web_name"]].rename(columns={"id": "element"})
 

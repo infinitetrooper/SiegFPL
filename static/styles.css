@@ -173,9 +173,9 @@ th {
     transform: translate(-50%, -50%);
 }
 
-.GK { bottom: 0%; left: 50%; }
+.GK { bottom: -5%; left: 50%; }
 .DEF { bottom: 20%; }
-.MID { bottom: 40%; }
+.MID { bottom: 45%; }
 .FWD { bottom: 70%; }
 
 .player-card {
