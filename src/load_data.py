@@ -139,7 +139,7 @@ def load_team_data(gw, team_id=1365773):
         latest_df = pd.DataFrame(latest_data)
 
         # Rename specific columns
-        latest_df.rename(columns={"id": "element", "web_name": "name"}, inplace=True)
+        latest_df.rename(columns={"id": "element"}, inplace=True)
 
         # Map to convert element_type to position
         position_map = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}

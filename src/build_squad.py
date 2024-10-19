@@ -53,8 +53,9 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     eligible_df = eligible_df[eligible_df["avg_3w_ict"] > 0].copy()
 
     if latest_data is not None:
+        print(">>>>>>>>>>>>>>>>>>")
         # Convert latest_data into a DataFrame with relevant columns
-        latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round"]].rename(columns={"id": "element"})
+        latest_cost_df = pd.DataFrame(latest_data)[["id", "now_cost", "chance_of_playing_next_round", "web_name"]].rename(columns={"id": "element"})
 
         # Merge eligible_df with latest_cost_df on the element column
         eligible_df = pd.merge(eligible_df, latest_cost_df, on="element", how="left", indicator=False)
@@ -196,9 +197,7 @@ def optimize_transfers(current_team, eligible_players, free_transfers, value, cr
 
     # Define cost and name columns for current_team and eligible_players
     current_team_cost_column = "now_cost" if "now_cost" in current_team.columns else "value"
-    current_team_name_column = "web_name" if "web_name" in current_team.columns else "name"
     eligible_players_cost_column = "now_cost" if "now_cost" in eligible_players.columns else "value"
-    eligible_players_name_column = "web_name" if "web_name" in eligible_players.columns else "name"
 
     # Define the team column
     team_column = "team"

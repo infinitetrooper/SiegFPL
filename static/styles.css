@@ -175,45 +175,40 @@ th {
 
 .GK { bottom: 0%; left: 50%; }
 .DEF { bottom: 20%; }
-.MID { bottom: 45%; }
+.MID { bottom: 40%; }
 .FWD { bottom: 70%; }
 
-.TXkrm {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
+.player-card {
+    background-color: var(--background-color);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    width: 80px;
+    box-shadow: 0 4px 6px var(--background-color);
 }
 
-.bvQCVH {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.cebDFJ img {
+.player-shirt {
     width: 46px;
     height: auto;
 }
 
-.huoEoG {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.player-info {
     margin-top: 5px;
 }
 
-.eypCPX {
-    color: white;
+.player-name {
+    color: var(--text-color);
     font-weight: bold;
     font-size: 12px;
+    display: block;
+    margin-bottom: 3px;
 }
 
-.gA-DNjC {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
+.player-points {
+    background-color: var(--primary-color);
+    color: var(--background-color);
     padding: 2px 5px;
-    border-radius: 10px;
+    border-radius: 5px;
     font-size: 10px;
-    margin-top: 2px;
+    font-weight: bold;
 }
