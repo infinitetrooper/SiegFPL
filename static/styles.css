@@ -173,10 +173,10 @@ th {
     transform: translate(-50%, -50%);
 }
 
-.GK { bottom: -5%; left: 50%; }
-.DEF { bottom: 20%; }
-.MID { bottom: 45%; }
-.FWD { bottom: 70%; }
+.GK { bottom: 70%; left: 50%; }
+.DEF { bottom: 45%; }
+.MID { bottom: 20%; }
+.FWD { bottom: -5% }
 
 .player-card {
     background-color: var(--background-color);
