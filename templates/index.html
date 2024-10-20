@@ -5,6 +5,8 @@
     <title>Sieg FPL - Your Fantasy Premier League Companion</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <!-- Include any additional scripts or styles -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-G3Z5Y74FG9"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -12,6 +14,7 @@
       gtag('js', new Date());
       gtag('config', 'G-G3Z5Y74FG9');
     </script>
+    <!-- Local Storage Scripts -->
     <script>
         function loadStoredValues() {
             const teamId = localStorage.getItem('teamId') || '';
@@ -39,64 +42,65 @@
     </script>
 </head>
 <body>
-    <h1>Sieg FPL 🚀</h1>
-    <h5><i>Your Fantasy Premier League Companion</i></h5>
-    <div class="main-container">
-        <!-- Left Side: Pitch -->
-        <div class="left-container">
-            <div class="pitch">
-                {% if result %}
-                    {% for player in result.best_11 %}
-                        <div class="player {{ player.position }}" style="left: {{ player.x }}%;">
-                            <div class="player-card">
-                                <img
-                                    src="{{ url_for('static', filename='img/shirts/shirt_' + (player.player_team|string + '_1-220.webp' if player.position == 'GK' else player.player_team|string + '-220.webp')) }}"
-                                    alt="{{ player.name }}'s Shirt"
-                                    class="player-shirt">
-                                <div class="player-info">
-                                    <span class="player-name">{{ player.web_name }}</span>
+    <header>
+        <h1>Sieg FPL 🚀</h1>
+        <h5>Your Fantasy Premier League Companion</h5>
+    </header>
+
+    <main>
+        <div class="main-container">
+            <!-- Left Side: Pitch -->
+            <section class="left-container">
+                <div class="pitch">
+                    {% if result %}
+                        {% for player in result.best_11 %}
+                            <div class="player {{ player.position }}" style="left: {{ player.x }}%;">
+                                <div class="player-card">
+                                    <img
+                                        src="{{ url_for('static', filename='img/shirts/shirt_' + (player.player_team|string + '_1-220.webp' if player.position == 'GK' else player.player_team|string + '-220.webp')) }}"
+                                        alt="{{ player.web_name }}'s Shirt"
+                                        class="player-shirt">
+                                    <div class="player-name">{{ player.web_name }}</div>
                                     <div class="player-points">{{ player.xPts }}</div>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <!-- Optionally, display an empty pitch or a placeholder message -->
-                    <p class="placeholder-message">Submit the form to see your best 11!</p>
-                {% endif %}
-            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="placeholder-message">Submit the form to see your best 11!</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Right Side: Input Form -->
+            <section class="right-container">
+                <div class="container">
+                    {% if error %}
+                        <p class="error">{{ error }}</p>
+                    {% endif %}
+                    <form method="POST" onsubmit="saveValues()">
+                        <label for="team_id">Team ID</label>
+                        <input type="number" id="team_id" name="team_id" required placeholder="Enter your FPL team ID">
+
+                        <label for="game_week">Game Week</label>
+                        <input type="number" id="game_week" name="game_week" required placeholder="Enter the game week">
+
+                        <label for="free_transfers">Available Free Transfers</label>
+                        <input type="number" id="free_transfers" name="free_transfers" required placeholder="Enter free transfers">
+
+                        <label for="wildcard">
+                            <input type="checkbox" id="wildcard" name="wildcard">
+                            Using Wildcard
+                        </label>
+
+                        <input type="submit" value="Get Best Squad">
+                    </form>
+                </div>
+            </section>
         </div>
+    </main>
 
-        <!-- Right Side: Input Form -->
-        <div class="right-container">
-            <!-- Input Form -->
-            <div class="container">
-                {% if error %}
-                    <p class="error">{{ error }}</p>
-                {% endif %}
-                <form method="POST" onsubmit="saveValues()">
-                    <label for="team_id">Team ID</label>
-                    <input type="number" id="team_id" name="team_id" required>
-
-                    <label for="game_week">Game Week</label>
-                    <input type="number" id="game_week" name="game_week" required>
-
-                    <label for="free_transfers">Available Free Transfers</label>
-                    <input type="number" id="free_transfers" name="free_transfers" required>
-
-                    <label for="wildcard">
-                        <input type="checkbox" id="wildcard" name="wildcard">
-                        Using Wildcard
-                    </label>
-
-                    <input type="submit" value="Get Best Squad">
-                </form>
-            </div>
-        </div>
-    </div>
+    <footer>
+        <p>More graveyard of fleeting excitements at <a href="https://infinitetrooper.com" target="_blank">InfiniteTrooper</a>.</p>
+    </footer>
 </body>
-<footer>
-    <p></p>
-    <p>More graveyard of fleeting excitements at <a href="https://infinitetrooper.com" target="_blank">InfiniteTrooper</a>.</p>
-</footer>
 </html>

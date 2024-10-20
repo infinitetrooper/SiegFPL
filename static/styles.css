@@ -1,44 +1,45 @@
+/* Global Styles */
 :root {
-		--primary-color: #3ecf8e;
-		--primary-hover-color: #2eb77d;
-		--background-color: #1c1c1c;
-		--container-background-color: #2a2a2a;
-		--text-color: #f0f0f0;
-		--border-color: #333;
-		--error-color: #ff4d4f;
-		--input-background: #3a3a3a;
+    --primary-color: #3ecf8e;
+    --primary-hover-color: #2eb77d;
+    --background-color: #1c1c1c;
+    --container-background-color: #2a2a2a;
+    --text-color: #f0f0f0;
+    --border-color: #333;
+    --error-color: #ff4d4f;
+    --input-background: #3a3a3a;
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1;
+    font-family: var(--font-family);
+    line-height: 1.6;
     color: var(--text-color);
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 20px;
     background-color: var(--background-color);
+    margin: 0;
+}
+
+h1, h2, h5 {
+    color: var(--primary-color);
+    margin-bottom: 0.5em;
+    text-align: center;
 }
 
 h1 {
-    color: var(--primary-color);
-    text-align: left;
-}
-
-h2 {
-    color: var(--primary-color);
-    margin-bottom: 20px;
-    text-align: left;
+    font-size: 2em;
+    font-weight: 700;
 }
 
 h5 {
-    text-align: left;
-    color: var(--primary-color);
-}
-
-footer {
-    text-align: center;
-    color: var(--primary-color);
-    font-weight: 500;
+    font-size: 1em;
+    font-weight: 400;
+    font-style: italic;
 }
 
 a {
@@ -55,46 +56,43 @@ a:hover {
     background-color: var(--container-background-color);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     margin-bottom: 20px;
 }
 
 form {
-    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 label {
-    display: block;
-    margin-bottom: 5px;
     font-weight: bold;
+    margin-bottom: 5px;
 }
 
-input[type="number"], input[type="checkbox"] {
+input[type="number"], input[type="text"], input[type="email"], select {
     width: 100%;
-    padding: 8px;
-    margin-bottom: 20px;
+    padding: 10px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    box-sizing: border-box;
     background-color: var(--input-background);
     color: var(--text-color);
 }
 
 input[type="checkbox"] {
-    width: auto;
-    margin-right: 5px;
+    margin-right: 10px;
 }
 
 input[type="submit"] {
     background-color: var(--primary-color);
-    color: var(--container-background-color);
-    padding: 10px 15px;
+    color: var(--background-color);
+    padding: 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-		font-weight: bold;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
 }
 
 input[type="submit"]:hover {
@@ -109,28 +107,27 @@ input[type="submit"]:hover {
 
 .main-container {
     display: flex;
-    flex-direction: row;
-    margin-top: 20px;
+    flex-wrap: wrap;
+    padding: 20px;
+    gap: 20px;
 }
 
-.left-container {
-    flex: 2;
-}
-
-.right-container {
-    flex: 1;
+.left-container, .right-container {
+    flex: 1 1 300px;
 }
 
 .pitch {
-    width: 450px;
-    height: 600px;
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
     background-image: url('../static/img/football_pitch.svg');
     background-size: cover;
-    background-repeat: no-repeat;
-    background-position: left;
-    position: relative;
-    margin: 20px auto;
-    border: 2px solid var(--primary-color);
+    background-position: center;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
 }
 
 .player {
@@ -138,22 +135,22 @@ input[type="submit"]:hover {
     transform: translate(-50%, -50%);
 }
 
-.GK { bottom: 70%; left: 50%; }
-.DEF { bottom: 45%; }
-.MID { bottom: 20%; }
-.FWD { bottom: -5% }
+.GK { top: 10%; left: 50%; }
+.DEF { top: 30%; }
+.MID { top: 55%; }
+.FWD { top: 80%; }
 
 .player-card {
     background-color: var(--background-color);
     border-radius: 10px;
-    padding: 10px;
+    padding: 4px;
     text-align: center;
     width: 80px;
     box-shadow: 0 4px 6px var(--background-color);
 }
 
 .player-shirt {
-    width: 46px;
+    width: 40px;
     height: auto;
 }
 
@@ -167,6 +164,10 @@ input[type="submit"]:hover {
     font-size: 12px;
     display: block;
     margin-bottom: 3px;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .player-points {
@@ -174,7 +175,7 @@ input[type="submit"]:hover {
     color: var(--background-color);
     padding: 2px 5px;
     border-radius: 5px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
 }
 
@@ -183,4 +184,29 @@ input[type="submit"]:hover {
     text-align: center;
     margin-top: 50%;
     font-size: 1.2em;
+}
+
+footer {
+    text-align: center;
+    color: var(--text-color);
+    padding: 20px;
+    font-size: 0.9em;
+    background-color: var(--container-background-color);
+}
+
+footer a {
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        flex-direction: column;
+        padding: 10px;
+    }
+    .left-container, .right-container {
+        flex: 1 1 100%;
+    }
+    .pitch {
+        max-width: 100%;
+    }
 }
