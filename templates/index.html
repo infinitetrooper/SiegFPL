@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sieg FPL - Your Fantasy Premier League Companion</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Include any additional scripts or styles -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-G3Z5Y74FG9"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -41,111 +41,62 @@
 <body>
     <h1>Sieg FPL 🚀</h1>
     <h5><i>Your Fantasy Premier League Companion</i></h5>
-    <div class="container">
-        {% if error %}
-        <p class="error">{{ error }}</p>
-        {% endif %}
-        <form method="POST" onsubmit="saveValues()">
-            <label for="team_id">Team ID</label>
-            <input type="number" id="team_id" name="team_id" required>
-
-            <label for="game_week">Game Week</label>
-            <input type="number" id="game_week" name="game_week" required>
-
-            <label for="free_transfers">Available Free Transfers</label>
-            <input type="number" id="free_transfers" name="free_transfers" required>
-
-            <label for="wildcard">
-                <input type="checkbox" id="wildcard" name="wildcard">
-                Using Wildcard
-            </label>
-
-            <input type="submit" value="Get Best Squad">
-        </form>
-    </div>
-
-    {% if result %}
-    <div class="summary-container">
-        <div class="summary-item">
-            <h2>xPoints</h2>
-            <p class="predicted-points">{{ result.predicted_points }}</p>
+    <div class="main-container">
+        <!-- Left Side: Pitch -->
+        <div class="left-container">
+            <div class="pitch">
+                {% if result %}
+                    {% for player in result.best_11 %}
+                        <div class="player {{ player.position }}" style="left: {{ player.x }}%;">
+                            <div class="player-card">
+                                <img
+                                    src="{{ url_for('static', filename='img/shirts/shirt_' + (player.player_team|string + '_1-220.webp' if player.position == 'GK' else player.player_team|string + '-220.webp')) }}"
+                                    alt="{{ player.name }}'s Shirt"
+                                    class="player-shirt">
+                                <div class="player-info">
+                                    <span class="player-name">{{ player.web_name }}</span>
+                                    <div class="player-points">{{ player.xPts }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Optionally, display an empty pitch or a placeholder message -->
+                    <p class="placeholder-message">Submit the form to see your best 11!</p>
+                {% endif %}
+            </div>
         </div>
-        <div class="summary-item">
-            <h2>Captain</h2>
-            <p>{{ result.captain["name"] }}</p>
-            <p>xPoints: {{ result.captain["xPts"] }}</p>
+
+        <!-- Right Side: Input Form -->
+        <div class="right-container">
+            <!-- Input Form -->
+            <div class="container">
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+                <form method="POST" onsubmit="saveValues()">
+                    <label for="team_id">Team ID</label>
+                    <input type="number" id="team_id" name="team_id" required>
+
+                    <label for="game_week">Game Week</label>
+                    <input type="number" id="game_week" name="game_week" required>
+
+                    <label for="free_transfers">Available Free Transfers</label>
+                    <input type="number" id="free_transfers" name="free_transfers" required>
+
+                    <label for="wildcard">
+                        <input type="checkbox" id="wildcard" name="wildcard">
+                        Using Wildcard
+                    </label>
+
+                    <input type="submit" value="Get Best Squad">
+                </form>
+            </div>
         </div>
     </div>
-    <div class="container">
-        <h2>Transfers</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Out</th>
-                    <th>In</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for transfer in result.transfers %}
-                <tr>
-                    <td>{{ transfer[0]['name'] }}</td>
-                    <td>{{ transfer[1]['name'] }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="container">
-        <h2>Full Squad ({{ result.total_cost }})</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Position</th>
-                    <th>Cost</th>
-                    <th>xPoints</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for player in result.squad.itertuples() %}
-                <tr>
-                    <td>{{ player.name }}</td>
-                    <td>{{ player.position }}</td>
-                    <td>{{ player.now_cost }}</td>
-                    <td>{{ player.xPts }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="container">
-        <h2>Best Starting 11</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Position</th>
-                    <th>Cost</th>
-                    <th>xPoints</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for player in result.best_11.itertuples() %}
-                <tr>
-                    <td>{{ player.name }}</td>
-                    <td>{{ player.position }}</td>
-                    <td>{{ player.now_cost }}</td>
-                    <td>{{ player.xPts }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
 </body>
-    <footer>
-        <p></p>
-        <p>More graveyard of fleeting excitements at <a href="https://infinitetrooper.com" target="_blank">InfiniteTrooper</a>.</p>
-    </footer>
+<footer>
+    <p></p>
+    <p>More graveyard of fleeting excitements at <a href="https://infinitetrooper.com" target="_blank">InfiniteTrooper</a>.</p>
+</footer>
 </html>

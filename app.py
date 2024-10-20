@@ -19,10 +19,7 @@ def index():
         except Exception as e:
             error = str(e)
 
-        if result:
-            return render_template('pitch.html', best_11=result['best_11'])
-
-    return render_template('index.html')
+    return render_template('index.html', result=result, error=error)
 
 def process_squad_data(team_id, game_week, free_transfers, wildcard):
     squad, best_11_df, captain, predicted_points, transfers = get_best_squad(
@@ -35,7 +32,7 @@ def process_squad_data(team_id, game_week, free_transfers, wildcard):
     position_order = {'GK': 1, 'DEF': 2, 'MID': 3, 'FWD': 4}
     squad = squad.sort_values(by='position', key=lambda x: x.map(position_order.get))
     best_11_df = best_11_df.sort_values(by='position', key=lambda x: x.map(position_order.get))
-    
+
     # Convert DataFrames to list of dictionaries
     squad = squad.to_dict('records')
     best_11 = best_11_df.to_dict('records')

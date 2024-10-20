@@ -10,10 +10,10 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1;
     color: var(--text-color);
-    max-width: 800px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 20px;
     background-color: var(--background-color);
@@ -21,8 +21,7 @@ body {
 
 h1 {
     color: var(--primary-color);
-    margin-bottom: 20px;
-    text-align: center;
+    text-align: left;
 }
 
 h2 {
@@ -32,7 +31,7 @@ h2 {
 }
 
 h5 {
-    text-align: center;
+    text-align: left;
     color: var(--primary-color);
 }
 
@@ -108,61 +107,27 @@ input[type="submit"]:hover {
     text-align: center;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-th {
-    background-color: var(--primary-color);
-    color: var(--container-background-color);
-}
-
-.captain {
-    font-weight: bold;
-    color: var(--error-color);
-}
-
-.predicted-points {
-    font-size: 1.2em;
-    font-weight: bold;
-    text-align: center;
+.main-container {
+    display: flex;
+    flex-direction: row;
     margin-top: 20px;
 }
 
-.summary-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
+.left-container {
+    flex: 2;
 }
 
-.summary-item {
+.right-container {
     flex: 1;
-    text-align: center;
-    padding: 10px;
-    background-color: var(--container-background-color);
-    border-radius: 8px;
-    margin: 0 10px;
-}
-
-.summary-item h2 {
-    margin-bottom: 10px;
 }
 
 .pitch {
-    width: 600px;
-    height: 800px;
+    width: 450px;
+    height: 600px;
     background-image: url('../static/img/football_pitch.svg');
     background-size: cover;
     background-repeat: no-repeat;
-    background-position: center;
+    background-position: left;
     position: relative;
     margin: 20px auto;
     border: 2px solid var(--primary-color);
@@ -211,4 +176,11 @@ th {
     border-radius: 5px;
     font-size: 10px;
     font-weight: bold;
+}
+
+.placeholder-message {
+    color: var(--text-color);
+    text-align: center;
+    margin-top: 50%;
+    font-size: 1.2em;
 }
