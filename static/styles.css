@@ -17,6 +17,10 @@
     padding: 0;
 }
 
+html {
+    font-size: 16px;
+}
+
 body {
     font-family: var(--font-family);
     line-height: 1.6;
@@ -179,52 +183,20 @@ input[type="submit"]:hover {
     font-weight: bold;
 }
 
-.placeholder-message {
-    color: var(--text-color);
-    text-align: center;
-    margin-top: 50%;
-    font-size: 1.2em;
-}
-
-footer {
-    text-align: center;
-    color: var(--text-color);
-    padding: 20px;
-    font-size: 0.9em;
-    background-color: var(--container-background-color);
-}
-
-footer a {
-    color: var(--primary-color);
-}
-
-@media (max-width: 768px) {
-    .main-container {
-        flex-direction: column;
-        padding: 10px;
-    }
-    .left-container, .right-container {
-        flex: 1 1 100%;
-    }
-    .pitch {
-        max-width: 100%;
-    }
-}
-
 .substitutes {
     margin-top: 20px;
     padding: 10px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-around;
     align-items: center;
 }
 
 .substitute-player {
-    flex: 1;
-    max-width: 120px;
-    margin: 0 5px;
+    flex: 1 1 80px;
+    margin: 5px;
     text-align: center;
 }
 
@@ -278,4 +250,67 @@ footer a {
     font-weight: bold;
     color: var(--primary-color);
     text-align: center;
+}
+
+footer {
+    text-align: center;
+    color: var(--text-color);
+    padding: 20px;
+    font-size: 0.9em;
+    background-color: var(--container-background-color);
+}
+
+footer a {
+    color: var(--primary-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .main-container {
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+    }
+    .left-container, .right-container {
+        flex: none;
+        width: 100%;
+    }
+    .pitch {
+        max-width: 100%;
+        margin-bottom: 20px;
+    }
+    .player-card {
+        width: 60px;
+    }
+    .player-shirt {
+        width: 30px;
+    }
+    .player-name, .player-points {
+        font-size: 10px;
+    }
+    .stats-card {
+        padding: 6px 8px;
+    }
+    .stats-label {
+        font-size: 10px;
+    }
+    .stats-value {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5em;
+    }
+    h5 {
+        font-size: 0.9em;
+    }
+    input[type="submit"] {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    .container {
+        padding: 15px;
+    }
 }
