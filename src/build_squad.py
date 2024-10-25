@@ -23,12 +23,19 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     if gw < 2:
         raise ValueError("Game week must be at least 2 or higher to calculate averages.")
 
-    # Step 1: Calculate avg_3w_ict ending gw - 1
-    prev_gw_df = merged_gw_df[merged_gw_df["GW"] < gw].copy()  # Explicit copy to avoid chained assignment issues
-    window_size = 3 if gw >= 4 else gw - 1
 
+    # Find the latest available gameweek in the data
+    max_available_gw = merged_gw_df["GW"].max()
+    target_gw = min(gw - 1, max_available_gw)
+    # Calculate how many previous gameweeks we can use
+    available_gws = merged_gw_df[merged_gw_df["GW"] <= target_gw]["GW"].unique()
+    window_size = min(3, len(available_gws))  # Use what's available up to 3 weeks
+
+    # Step 1: Calculate avg_3w_ict ending gw - 1
+    prev_gw_df = merged_gw_df[merged_gw_df["GW"] <= target_gw].copy()
+    
     # Step 2: Filter the current game week data
-    current_gw_df = merged_gw_df[merged_gw_df["GW"] == gw - 1].copy()
+    current_gw_df = prev_gw_df.loc[prev_gw_df.groupby("element")["GW"].idxmax()].copy()
 
     # Step 3: Calculate the avg_3w_ict
     prev_gw_df["avg_3w_ict"] = prev_gw_df.groupby("element")["ict_index"].rolling(
@@ -113,6 +120,7 @@ def get_eligible_players_for_gw(gw, merged_gw_df, latest_data=None):
     )
 
     return eligible_df
+
 
 def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, free_transfers=1, transfer_threshold=4):
     """
