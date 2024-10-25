@@ -248,3 +248,34 @@ footer a {
     font-size: 0.8em;
     color: var(--background-color);
 }
+
+.stats-overlay {
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 10;
+}
+
+.stats-card {
+    background-color: var(--container-background-color);
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.stats-label {
+    font-size: 12px;
+    color: var(--text-color);
+    opacity: 0.8;
+    text-align: center;
+}
+
+.stats-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary-color);
+    text-align: center;
+}

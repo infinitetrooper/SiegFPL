@@ -54,6 +54,16 @@
                 <!-- Pitch Section -->
                 <div class="pitch">
                     {% if result %}
+                        <div class="stats-overlay">
+                            <div class="stats-card">
+                                <div class="stats-label">Team Cost</div>
+                                <div class="stats-value">£{{ result.total_cost/10 }}M</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-label"> xPoints</div>
+                                <div class="stats-value">{{ result.predicted_points }}</div>
+                            </div>
+                        </div>
                         {% for player in result.best_11 %}
                             <div class="player {{ player.position }}" style="left: {{ player.x }}%;">
                                 <div class="player-card">
