@@ -20,9 +20,6 @@
             const teamId = localStorage.getItem('teamId') || '';
             document.getElementById('team_id').value = teamId;
 
-            const gameWeek = localStorage.getItem('gameWeek') || '';
-            document.getElementById('game_week').value = gameWeek;
-
             const freeTransfers = localStorage.getItem('freeTransfers') || '';
             document.getElementById('free_transfers').value = freeTransfers;
         }
@@ -30,9 +27,6 @@
         function saveValues() {
             const teamId = document.getElementById('team_id').value;
             localStorage.setItem('teamId', teamId);
-
-            const gameWeek = document.getElementById('game_week').value;
-            localStorage.setItem('gameWeek', gameWeek);
 
             const freeTransfers = document.getElementById('free_transfers').value;
             localStorage.setItem('freeTransfers', freeTransfers);
@@ -108,9 +102,6 @@
                     <form method="POST" onsubmit="saveValues()">
                         <label for="team_id">Team ID</label>
                         <input type="number" id="team_id" name="team_id" required placeholder="Enter your FPL team ID">
-
-                        <label for="game_week">Game Week</label>
-                        <input type="number" id="game_week" name="game_week" required placeholder="Enter the game week">
 
                         <label for="free_transfers">Available Free Transfers</label>
                         <input type="number" id="free_transfers" name="free_transfers" required placeholder="Enter free transfers">

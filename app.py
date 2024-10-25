@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from src.main import get_best_squad
+from src.main import get_best_squad, get_best_possible_squad
 from src.player_positioning import position_players
 
 app = Flask(__name__)
@@ -10,21 +10,27 @@ def index():
     error = None
     if request.method == 'POST':
         team_id = request.form['team_id']
-        game_week = request.form['game_week']
         free_transfers = request.form['free_transfers']
         wildcard = request.form.get('wildcard') == 'on'
 
         try:
-            result = process_squad_data(team_id, game_week, free_transfers, wildcard)
+            result = process_squad_data(team_id, free_transfers, wildcard)
+        except Exception as e:
+            error = str(e)
+    else:
+        try:
+            result = process_squad_data(None, 0, True)
         except Exception as e:
             error = str(e)
 
     return render_template('index.html', result=result, error=error)
 
-def process_squad_data(team_id, game_week, free_transfers, wildcard):
-    squad, best_11_df, captain, predicted_points, transfers = get_best_squad(
-        int(team_id), int(game_week), int(free_transfers), wildcard
-    )
+def process_squad_data(team_id, free_transfers, wildcard):
+    if wildcard:
+        squad, best_11_df, captain, predicted_points, transfers = get_best_possible_squad()
+    else:
+        squad, best_11_df, captain, predicted_points, transfers = get_best_squad(int(team_id), int(free_transfers), wildcard)
+    
     predicted_points = round(predicted_points)
     total_cost = squad['value'].sum()
 

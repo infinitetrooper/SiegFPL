@@ -104,7 +104,7 @@ def load_latest_data():
     try:
         with open(file_path, "r") as json_file:
             data = json.load(json_file)
-            return data['elements']
+            return data
     except Exception as e:
         raise FileNotFoundError(f"Failed to load data from {file_path}: {str(e)}")
 
@@ -131,7 +131,7 @@ def load_team_data(gw, team_id=1365773):
     df = pd.DataFrame(picks)
 
     # Load the latest data
-    latest_data = load_latest_data()
+    latest_data = load_latest_data()["elements"]
 
     # Merge the latest data into the picks DataFrame
     if latest_data is not None:
