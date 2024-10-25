@@ -51,6 +51,7 @@
         <div class="main-container">
             <!-- Left Side: Pitch -->
             <section class="left-container">
+                <!-- Pitch Section -->
                 <div class="pitch">
                     {% if result %}
                         {% for player in result.best_11 %}
@@ -65,12 +66,33 @@
                                 </div>
                             </div>
                         {% endfor %}
-                    {% else %}
-                        <p class="placeholder-message">Submit the form to see your best 11!</p>
+                    {% endif %}
+                </div>
+                <!-- Substitutes Section -->
+                <div class="substitutes">
+                    {% if result %}
+                        {% for player in result.squad %}
+                            {% set best_11_elements = [] %}
+                            {% for p in result.best_11 %}
+                                {% set _ = best_11_elements.append(p.element|string) %}
+                            {% endfor %}
+                            
+                            {% if player.element|string not in best_11_elements %}
+                                <div class="substitute-player">
+                                    <div class="player-card">
+                                        <img
+                                            src="{{ url_for('static', filename='img/shirts/shirt_' + (player.player_team|string + '_1-220.webp' if player.position == 'GK' else player.player_team|string + '-220.webp')) }}"
+                                            alt="{{ player.web_name }}'s Shirt"
+                                            class="player-shirt">
+                                        <div class="player-name">{{ player.web_name }}</div>
+                                        <div class="player-points">{{ player.xPts }}</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
                     {% endif %}
                 </div>
             </section>
-
             <!-- Right Side: Input Form -->
             <section class="right-container">
                 <div class="container">

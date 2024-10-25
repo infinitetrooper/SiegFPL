@@ -210,3 +210,41 @@ footer a {
         max-width: 100%;
     }
 }
+
+.substitutes {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.substitute-player {
+    flex: 1;
+    max-width: 120px;
+    margin: 0 5px;
+    text-align: center;
+}
+
+.substitute-player .player-card {
+    background: var(--background-color);
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.substitute-player .player-shirt {
+    width: 40px;
+    height: auto;
+}
+
+.substitute-player .player-name {
+    font-size: 0.8em;
+    margin-top: 2px;
+}
+
+.substitute-player .player-points {
+    font-size: 0.8em;
+    color: var(--background-color);
+}
