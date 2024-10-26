@@ -1,10 +1,6 @@
 pulp
 requests
 pandas
-GitPython
 LinearRegression
-scikit-learn
 numpy
-statsmodels
-matplotlib
 flask
