@@ -56,7 +56,7 @@ def load_and_filter_all_seasons_data(min_gw=10, min_minutes=60):
     project_root = os.path.dirname(os.path.dirname(__file__))  # Navigate to the project root
     current_date = datetime.now().strftime("%Y-%m-%d")
     file_path = os.path.join(project_root, "fpl-data", current_date, "data", "cleaned_merged_seasons.csv")
-    remote_path = f"data/cleaned_merged_seasons.csv"
+    remote_path = "data/cleaned_merged_seasons.csv"
 
     # Check if the file exists, if not, download the repository
     if not os.path.exists(file_path):
@@ -98,7 +98,7 @@ def load_latest_data():
 
         # Double-check if the file was saved correctly
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Failed to fetch latest data.")
+            raise FileNotFoundError("Failed to fetch latest data.")
                                     
     # Load the JSON data from the file
     try:
