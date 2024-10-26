@@ -45,6 +45,16 @@
         <div class="main-container">
             <!-- Left Side: Pitch -->
             <section class="left-container">
+                {% if result %}
+                    <!-- Move header outside the pitch div -->
+                    <div class="pitch-header">
+                        {% if result.team_id %}
+                            <h2>Best Team for Game Week {{ result.gw }} for Team: {{ result.team_id }}</h2>
+                        {% else %}
+                            <h2>Best Team for Game Week {{ result.gw }}</h2>
+                        {% endif %}
+                    </div>
+                {% endif %}
                 <!-- Pitch Section -->
                 <div class="pitch">
                     {% if result %}

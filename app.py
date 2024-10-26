@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from src.main import get_best_squad, get_best_possible_squad
+from src.main import get_best_squad, get_best_possible_squad, get_gameweek
 from src.player_positioning import position_players
 
 app = Flask(__name__)
@@ -52,7 +52,9 @@ def process_squad_data(team_id, free_transfers, wildcard):
         'captain': captain,
         'predicted_points': predicted_points,
         'transfers': transfers,
-        'total_cost': total_cost
+        'total_cost': total_cost,
+        'gw': get_gameweek(),
+        'team_id': team_id
     }
 
 if __name__ == '__main__':

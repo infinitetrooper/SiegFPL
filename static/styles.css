@@ -314,3 +314,17 @@ footer a {
         padding: 15px;
     }
 }
+
+.pitch-header {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    background-color: var(--container-background-color);
+    border-radius: 8px;
+    margin-bottom: 15px;  /* Add space between header and pitch */
+}
+.pitch-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--text-color);
+}
