@@ -289,30 +289,28 @@ def optimize_transfers(current_team, eligible_players, free_transfers, value, cr
 
 def select_best_11(squad, criteria="xPts"):
     """
-    Selects the best 11 players from the squad, ensuring position constraints are met, including limiting to 1 goalkeeper.
+    Selects the best 11 players from the squad, ensuring position constraints are met, limiting to 1 goalkeeper.
     """
+    # First select one goalkeeper
+    best_11 = squad[squad['position'] == 'GK'].sort_values(by=criteria, ascending=False).head(1)
+    
+    # Add minimum required outfield players
     best_11 = pd.concat([
-        squad[squad['position'] == 'GK'].sort_values(by=criteria, ascending=False).head(1),
+        best_11,
         squad[squad['position'] == 'DEF'].sort_values(by=criteria, ascending=False).head(3),
         squad[squad['position'] == 'MID'].sort_values(by=criteria, ascending=False).head(3),
         squad[squad['position'] == 'FWD'].sort_values(by=criteria, ascending=False).head(1)
     ])
 
+    # Fill remaining spots with best outfield players only
     remaining_spots = 11 - len(best_11)
-    additional_players = squad[~squad.index.isin(best_11.index)].sort_values(by=criteria, ascending=False)
-
-    # Fill the remaining spots, ensuring no more than 1 goalkeeper
-    for _, player in additional_players.iterrows():
-        if remaining_spots == 0:
-            break
-        # Add the player only if it's not a goalkeeper (GK) or if we already have 1 GK in best 11
-        if player['position'] != 'GK' or best_11[best_11['position'] == 'GK'].shape[0] == 1:
-            # Before concatenating, drop any columns that are all NaN from the player DataFrame
-            player_df = player.to_frame().T.dropna(axis=1, how='all')
-
-            # Then, concatenate the player DataFrame with best_11
-            best_11 = pd.concat([best_11, player_df])
-            remaining_spots -= 1
+    outfield_players = squad[
+        (~squad.index.isin(best_11.index)) & 
+        (squad['position'] != 'GK')
+    ].sort_values(by=criteria, ascending=False)
+    
+    # Add the best remaining outfield players
+    best_11 = pd.concat([best_11, outfield_players.head(remaining_spots)])
 
     return best_11
 
