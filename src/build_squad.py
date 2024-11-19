@@ -153,10 +153,13 @@ def pick_best_squad(player_data, budget=1000, criteria="xPts", prev_squad=None, 
     return squad, best_11, captain, transfers
 
 def select_best_squad_ilp(player_data, budget, cost_column, criteria):
+    # Reset index to ensure unique indices
+    player_data = player_data.reset_index(drop=True)
+    
     # Define the problem
     prob = pulp.LpProblem("Squad_Selection", pulp.LpMaximize)
 
-    # Decision variables
+    # Decision variables - one per player
     player_vars = pulp.LpVariable.dicts("player", player_data.index, cat='Binary')
 
     # Objective function: Maximize total xPts
@@ -164,6 +167,9 @@ def select_best_squad_ilp(player_data, budget, cost_column, criteria):
 
     # Constraint: Total cost should be less than or equal to budget
     prob += pulp.lpSum([player_data.loc[i, cost_column] * player_vars[i] for i in player_data.index]) <= budget
+
+    # Constraint: Total number of players must be exactly 15
+    prob += pulp.lpSum([player_vars[i] for i in player_data.index]) == 15
 
     # Constraints: Position requirements
     position_limits = {'GK': 2, 'DEF': 5, 'MID': 5, 'FWD': 3}
@@ -174,11 +180,12 @@ def select_best_squad_ilp(player_data, budget, cost_column, criteria):
     for team in player_data['team'].unique():
         prob += pulp.lpSum([player_vars[i] for i in player_data.index if player_data.loc[i, 'team'] == team]) <= 3
 
+    # NEW: Constraint to ensure each unique player is selected at most once
+    for player_id in player_data['element'].unique():
+        prob += pulp.lpSum([player_vars[i] for i in player_data.index if player_data.loc[i, 'element'] == player_id]) <= 1
+
     # Solve the problem with suppressed output
     prob.solve(pulp.PULP_CBC_CMD(msg=False))
-
-    # Print the status of the solution
-    print("Status:", pulp.LpStatus[prob.status])
 
     # Extract the selected players
     selected_players = [i for i in player_data.index if player_vars[i].varValue == 1]
