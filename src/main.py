@@ -5,7 +5,7 @@ def get_best_squad(team_id, free_transfers, wildcard=False):
     game_week = get_gameweek()
     try:
         latest_data = load_latest_data()["elements"]
-        fpl_data = load_and_filter_data(year="2024-25", min_minutes=60, min_gw=3)
+        fpl_data = load_and_filter_data(year="2024-25", min_minutes=60, min_gw=5)
         eligible_players = get_eligible_players_for_gw(gw=game_week, merged_gw_df=fpl_data, latest_data=latest_data)
 
         value = 1000
