@@ -284,7 +284,13 @@ def optimize_transfers(current_team, eligible_players, free_transfers, value, cr
         optimal_transfers = []
 
     print(f"Final Squad Cost: {current_team[current_team_cost_column].sum()}")
-
+    
+    # Convert the float values of player team to int
+    current_team['player_team'] = current_team['player_team'].fillna(0).astype(int)
+    
+    # Merge 'team' column into 'player_team'
+    current_team['player_team'] = current_team.apply(lambda row: row['team'] if row['player_team'] == 0 else row['player_team'], axis=1)
+    
     return current_team, optimal_transfers
 
 def select_best_11(squad, criteria="xPts"):

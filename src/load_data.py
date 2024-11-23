@@ -152,7 +152,7 @@ def load_team_data(gw, team_id=1365773):
 
         # Drop any unnecessary columns from the original df that were replaced by latest_df
         df = df.drop([col for col in df.columns if '_drop' in col], axis=1)
-
+    
     return df, value
 
 def create_current_team_df(picks_df, player_data):
